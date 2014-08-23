@@ -1,0 +1,355 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9001A73619A79C310049DB99 /* intel_reg.h in Headers */ = {isa = PBXBuildFile; fileRef = 9001A73519A79C310049DB99 /* intel_reg.h */; };
+		9001A73819A79C390049DB99 /* intel_chipset.h in Headers */ = {isa = PBXBuildFile; fileRef = 9001A73719A79C390049DB99 /* intel_chipset.h */; };
+		90BE8FCF19A20F4A00E9E8B5 /* AppleIntelInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 90BE8FCE19A20F4A00E9E8B5 /* AppleIntelInfo.cpp */; };
+		90BE8FD319A20FD200E9E8B5 /* AppleIntelInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 90BE8FD219A20FD200E9E8B5 /* AppleIntelInfo.h */; };
+		90BE8FD519A2104A00E9E8B5 /* essentials.h in Headers */ = {isa = PBXBuildFile; fileRef = 90BE8FD419A2104A00E9E8B5 /* essentials.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		9001A73519A79C310049DB99 /* intel_reg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = intel_reg.h; path = AppleIntelRegisterDumper/intel_reg.h; sourceTree = "<group>"; };
+		9001A73719A79C390049DB99 /* intel_chipset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = intel_chipset.h; path = AppleIntelRegisterDumper/intel_chipset.h; sourceTree = "<group>"; };
+		90BE8FBB19A20EDF00E9E8B5 /* AppleIntelInfo.kext */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AppleIntelInfo.kext; sourceTree = BUILT_PRODUCTS_DIR; };
+		90BE8FBF19A20EDF00E9E8B5 /* Kernel.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kernel.framework; path = System/Library/Frameworks/Kernel.framework; sourceTree = SDKROOT; };
+		90BE8FC819A20EDF00E9E8B5 /* AppleIntelInfo-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AppleIntelInfo-Prefix.pch"; sourceTree = "<group>"; };
+		90BE8FCE19A20F4A00E9E8B5 /* AppleIntelInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AppleIntelInfo.cpp; sourceTree = "<group>"; };
+		90BE8FD219A20FD200E9E8B5 /* AppleIntelInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppleIntelInfo.h; sourceTree = "<group>"; };
+		90BE8FD419A2104A00E9E8B5 /* essentials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = essentials.h; sourceTree = "<group>"; };
+		90EACB9219A6B7F800512CC9 /* AppleIntelRegisterDumper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppleIntelRegisterDumper.h; path = AppleIntelRegisterDumper/AppleIntelRegisterDumper.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		90BE8FB619A20EDF00E9E8B5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		90BE8FB019A20EDF00E9E8B5 = {
+			isa = PBXGroup;
+			children = (
+				90BE8FC019A20EDF00E9E8B5 /* AppleIntelInfo */,
+				90EACB8D19A6B71000512CC9 /* AppleIntelRegisterDumper */,
+				90BE8FBD19A20EDF00E9E8B5 /* Frameworks */,
+				90BE8FBC19A20EDF00E9E8B5 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		90BE8FBC19A20EDF00E9E8B5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				90BE8FBB19A20EDF00E9E8B5 /* AppleIntelInfo.kext */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		90BE8FBD19A20EDF00E9E8B5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				90BE8FBE19A20EDF00E9E8B5 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		90BE8FBE19A20EDF00E9E8B5 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				90BE8FBF19A20EDF00E9E8B5 /* Kernel.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		90BE8FC019A20EDF00E9E8B5 /* AppleIntelInfo */ = {
+			isa = PBXGroup;
+			children = (
+				90BE8FD019A20FA400E9E8B5 /* Header Files */,
+				90BE8FD119A20FBD00E9E8B5 /* Source files */,
+				90BE8FC119A20EDF00E9E8B5 /* Supporting Files */,
+			);
+			path = AppleIntelInfo;
+			sourceTree = "<group>";
+		};
+		90BE8FC119A20EDF00E9E8B5 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				90BE8FC819A20EDF00E9E8B5 /* AppleIntelInfo-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		90BE8FD019A20FA400E9E8B5 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				90BE8FD219A20FD200E9E8B5 /* AppleIntelInfo.h */,
+				90BE8FD419A2104A00E9E8B5 /* essentials.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		90BE8FD119A20FBD00E9E8B5 /* Source files */ = {
+			isa = PBXGroup;
+			children = (
+				90BE8FCE19A20F4A00E9E8B5 /* AppleIntelInfo.cpp */,
+			);
+			name = "Source files";
+			sourceTree = "<group>";
+		};
+		90EACB8D19A6B71000512CC9 /* AppleIntelRegisterDumper */ = {
+			isa = PBXGroup;
+			children = (
+				90EACB8E19A6B75600512CC9 /* Header Files */,
+			);
+			name = AppleIntelRegisterDumper;
+			sourceTree = "<group>";
+		};
+		90EACB8E19A6B75600512CC9 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				90EACB9219A6B7F800512CC9 /* AppleIntelRegisterDumper.h */,
+				9001A73519A79C310049DB99 /* intel_reg.h */,
+				9001A73719A79C390049DB99 /* intel_chipset.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		90BE8FB719A20EDF00E9E8B5 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9001A73819A79C390049DB99 /* intel_chipset.h in Headers */,
+				90BE8FD319A20FD200E9E8B5 /* AppleIntelInfo.h in Headers */,
+				9001A73619A79C310049DB99 /* intel_reg.h in Headers */,
+				90BE8FD519A2104A00E9E8B5 /* essentials.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		90BE8FBA19A20EDF00E9E8B5 /* AppleIntelInfo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 90BE8FCB19A20EDF00E9E8B5 /* Build configuration list for PBXNativeTarget "AppleIntelInfo" */;
+			buildPhases = (
+				90BE8FB519A20EDF00E9E8B5 /* Sources */,
+				90BE8FB619A20EDF00E9E8B5 /* Frameworks */,
+				90BE8FB719A20EDF00E9E8B5 /* Headers */,
+				90BE8FB819A20EDF00E9E8B5 /* Resources */,
+				90BE8FB919A20EDF00E9E8B5 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AppleIntelInfo;
+			productName = AppleIntelInfo;
+			productReference = 90BE8FBB19A20EDF00E9E8B5 /* AppleIntelInfo.kext */;
+			productType = "com.apple.product-type.kernel-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		90BE8FB119A20EDF00E9E8B5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0600;
+				ORGANIZATIONNAME = wordpress.pikeralpha.com;
+			};
+			buildConfigurationList = 90BE8FB419A20EDF00E9E8B5 /* Build configuration list for PBXProject "AppleIntelInfo" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 90BE8FB019A20EDF00E9E8B5;
+			productRefGroup = 90BE8FBC19A20EDF00E9E8B5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				90BE8FBA19A20EDF00E9E8B5 /* AppleIntelInfo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		90BE8FB819A20EDF00E9E8B5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXRezBuildPhase section */
+		90BE8FB919A20EDF00E9E8B5 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		90BE8FB519A20EDF00E9E8B5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90BE8FCF19A20F4A00E9E8B5 /* AppleIntelInfo.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		90BE8FC919A20EDF00E9E8B5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		90BE8FCA19A20EDF00E9E8B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		90BE8FCC19A20EDF00E9E8B5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "AppleIntelInfo/AppleIntelInfo-Prefix.pch";
+				INFOPLIST_FILE = "AppleIntelInfo/AppleIntelInfo-Info.plist";
+				MODULE_NAME = com.pikeralpha.driver.AppleIntelInfo;
+				MODULE_START = 0;
+				MODULE_STOP = 0;
+				MODULE_VERSION = 1.0.0d1;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx10.8;
+				VALID_ARCHS = x86_64;
+				WRAPPER_EXTENSION = kext;
+			};
+			name = Debug;
+		};
+		90BE8FCD19A20EDF00E9E8B5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "AppleIntelInfo/AppleIntelInfo-Prefix.pch";
+				INFOPLIST_FILE = "AppleIntelInfo/AppleIntelInfo-Info.plist";
+				MODULE_NAME = com.pikeralpha.driver.AppleIntelInfo;
+				MODULE_START = 0;
+				MODULE_STOP = 0;
+				MODULE_VERSION = 1.0.0d1;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx10.8;
+				VALID_ARCHS = x86_64;
+				WRAPPER_EXTENSION = kext;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		90BE8FB419A20EDF00E9E8B5 /* Build configuration list for PBXProject "AppleIntelInfo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90BE8FC919A20EDF00E9E8B5 /* Debug */,
+				90BE8FCA19A20EDF00E9E8B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		90BE8FCB19A20EDF00E9E8B5 /* Build configuration list for PBXNativeTarget "AppleIntelInfo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90BE8FCC19A20EDF00E9E8B5 /* Debug */,
+				90BE8FCD19A20EDF00E9E8B5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 90BE8FB119A20EDF00E9E8B5 /* Project object */;
+}

@@ -1,0 +1,8 @@
+.DS_Store
+.git
+
+xcuserdata
+project.xcworkspace
+
+/AppleIntelInfo/AppleIntelInfo.xcodeproj/xcuserdata
+/AppleIntelInfo/AppleIntelInfo.xcodeproj/project.xcworkspace
