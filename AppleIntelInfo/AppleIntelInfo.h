@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014 Pike R. Alpha. All rights reserved.
+ * Copyright (c) 2012-2015 Pike R. Alpha. All rights reserved.
  *
  * Original idea and initial development of MSRDumper.kext (c) 2011 by † RevoGirl.
  *
@@ -18,6 +18,9 @@
 #include <IOKit/IOMemoryDescriptor.h>
 #include <IOKit/IOTimerEventSource.h>
 
+#include <sys/vnode.h>
+#include <sys/fcntl.h>
+#include <sys/proc.h>
 #include <i386/cpuid.h>
 
 #pragma clang diagnostic push
@@ -29,7 +32,7 @@
 
 #define super IOService
 
-#define VERSION					"1.1"
+#define VERSION					"1.2"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -68,6 +71,19 @@
 #define NB_PCIE_CFG_ADDRESS(bus, dev, func, reg) \
 ((UInt32)(PCIEX_BASE_ADDRESS + ((UInt8)(bus) << 20) + \
 ((UInt8)(dev) << 15) + ((UInt8)(func) << 12) + (reg)))
+
+#define	FILE_PATH "/tmp/AppleIntelInfo.dat"
+
+#define TEMP_BUFFER_SIZE	256
+#define WRITE_BUFFER_SIZE	1024
+
+int tempBufferLength = 0;
+
+#define IOLOG(fmt, args...)								\
+memset(logBuffer, 0, TEMP_BUFFER_SIZE);				\
+snprintf(logBuffer, TEMP_BUFFER_SIZE, fmt, ##args);	\
+writeReport();
+
 
 //------------------------------------------------------------------------------
 
@@ -109,10 +125,6 @@ UInt8 ReadPci8(UInt8 Bus, UInt8 Dev, UInt8 Fun, UInt16 Reg)
 	}
 }
 
-#if REPORT_INTEL_REGS
-	#include "../AppleIntelRegisterDumper/AppleIntelRegisterDumper.h"
-#endif
-
 extern "C" void mp_rendezvous_no_intrs(void (*action_func)(void *), void * arg);
 extern "C" int cpu_number(void);
 
@@ -138,6 +150,8 @@ private:
 	
 	virtual IOReturn loopTimerEvent(void);
 
+	int writeReport(void);
+
 #if REPORT_MSRS
 	void reportMSRs(UInt8 aCPUModel);
 
@@ -162,9 +176,14 @@ private:
 
 	#define DEFINE_FUNC_VOID(func) void func(void)
 	#define DEFINE_FUNC_DUMP(func) void func(struct reg_debug *regs, uint32_t count)
+	
+	void intel_dump_other_regs(void);
+	void dumpRegisters(struct reg_debug *regs, uint32_t count);
+	void getPCHDeviceID(void);
+	void reportIntelRegs(void);
 #endif
 
-	UInt16 Interval	= 50;
+	UInt16 Interval = 50;
 	
 	UInt64	gCoreMultipliers		= 0ULL;
 	UInt64	gTriggeredPStates		= 0ULL;
@@ -172,6 +191,12 @@ private:
 	UInt64	gIGPUMultipliers		= 0ULL;
 	UInt64	gTriggeredIGPUPStates	= 0ULL;
 	
+	vfs_context_t mCtx				= NULL;
+	long reportFileOffset			= 0L;
+
+	char tempBuffer[TEMP_BUFFER_SIZE];
+	char logBuffer[WRITE_BUFFER_SIZE];
+
 public:
 	virtual IOService *	probe(IOService * provider, SInt32 * score) override;
 	virtual bool start(IOService * provider) override;
@@ -207,4 +232,8 @@ uint64_t gTSC = 0;
 
 #if REPORT_IGPU_P_STATES
 UInt8	* gMchbar	= NULL;
+#endif
+
+#if REPORT_INTEL_REGS
+	#include "../AppleIntelRegisterDumper/AppleIntelRegisterDumper.h"
 #endif

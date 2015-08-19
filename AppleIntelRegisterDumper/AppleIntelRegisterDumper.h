@@ -299,7 +299,7 @@ DEBUGSTRING(i830_debug_dspcntr)
 	const char *enabled = val & DISPLAY_PLANE_ENABLE ? "enabled" : "disabled";
 	char plane = val & DISPPLANE_SEL_PIPE_B ? 'B' : 'A';
 
-	if (HAS_PCH_SPLIT(devid))
+	if (HAS_PCH_SPLIT(devid) || IS_BROXTON(devid))
 	{
 		snprintf(result, len, "%s", enabled);
 	}
@@ -2788,7 +2788,9 @@ static struct reg_debug i945gm_mi_regs[] = {
 
 //------------------------------------------------------------------------------
 
-void intel_dump_other_regs(void)
+// void AppleIntelInto::intel_dump_other_regs(void)
+
+DEFINE_FUNC_VOID(AppleIntelInfo::intel_dump_other_regs)
 {
 	int i;
 	int fp, dpll;
@@ -2848,7 +2850,7 @@ void intel_dump_other_regs(void)
 						break;
 					default:
 						p1 = 1;
-						printf("LVDS P1 0x%x invalid encoding\n", (dpll >> 16) & 0x3f);
+						IOLOG("LVDS P1 0x%x invalid encoding\n", (dpll >> 16) & 0x3f);
 						break;
 				}
 			}
@@ -2883,7 +2885,7 @@ void intel_dump_other_regs(void)
 					break;
 				default:
 					ref = 0;
-					printf("ref out of range\n");
+					IOLOG("ref out of range\n");
 					break;
 			}
 		}
@@ -2914,7 +2916,7 @@ void intel_dump_other_regs(void)
 						break;
 					default:
 						p2 = 1;
-						printf("p2 out of range\n");
+						IOLOG("p2 out of range\n");
 						break;
 				}
 			}
@@ -2962,7 +2964,7 @@ void intel_dump_other_regs(void)
 					}	// fallback
 				default:
 					p1 = 1;
-					printf("p1 out of range\n");
+					IOLOG("p1 out of range\n");
 					break;
 			}
 
@@ -2976,7 +2978,7 @@ void intel_dump_other_regs(void)
 					break;
 				default:
 					ref = 0;
-					printf("ref out of range\n");
+					IOLOG("ref out of range\n");
 					break;
 			}
 		}
@@ -2990,7 +2992,7 @@ void intel_dump_other_regs(void)
 				case 6:
 					break;
 				default:
-					printf("SDVO phase shift %d out of range -- probably not an issue.\n", phase);
+					IOLOG("SDVO phase shift %d out of range -- probably not an issue.\n", phase);
 					break;
 			}
 		}
@@ -3000,7 +3002,7 @@ void intel_dump_other_regs(void)
 			case 0:
 				break;
 			default:
-				printf("fp select out of range\n");
+				IOLOG("fp select out of range\n");
 				break;
 		}
 
@@ -3021,14 +3023,14 @@ void intel_dump_other_regs(void)
 			dot = (ref * (5 * (m1 + 2) + (m2 + 2)) / (n + 2)) / (p1 * p2);
 		}
 		
-		printf("pipe %s dot %d n %d m1 %d m2 %d p1 %d p2 %d\n", disp_pipe == 0 ? "A" : "B", dot, n, m1, m2, p1, p2);
+		IOLOG("pipe %s dot %d n %d m1 %d m2 %d p1 %d p2 %d\n", disp_pipe == 0 ? "A" : "B", dot, n, m1, m2, p1, p2);
 	}
 }
 
 //------------------------------------------------------------------------------
 // void AppleIntelInfo::dumpRegisters(struct reg_debug *regs, uint32_t count)
 
-DEFINE_FUNC_DUMP(dumpRegisters)
+DEFINE_FUNC_DUMP(AppleIntelInfo::dumpRegisters)
 {
 	char name[30];
 	char debug[1024];
@@ -3046,24 +3048,24 @@ DEFINE_FUNC_DUMP(dumpRegisters)
 		if (regs[i].debug_output != NULL)
 		{
 			regs[i].debug_output(debug, sizeof(debug), regs[i].reg, val);
-			printf("%s: 0x%08x (%s)\n", name, val, debug);
+			IOLOG("%s: 0x%08x (%s)\n", name, val, debug);
 		}
 		else
 		{
-			printf("%s: 0x%08x\n", name, val);
+			IOLOG("%s: 0x%08x\n", name, val);
 		}
 	}
 }
 
 //------------------------------------------------------------------------------
-// void getPCHDeviceID(void)
+// void AppleIntelInfo::getPCHDeviceID(void)
 
-DEFINE_FUNC_VOID(getPCHDeviceID)
+DEFINE_FUNC_VOID(AppleIntelInfo::getPCHDeviceID)
 {
 	outl(0xcf8, 0x8000F800);
 	UInt64 pch_device = inl(0xcfc);
 
-	IOLog("PCH device.................: 0x%llX\n", pch_device);
+	IOLOG("PCH device.................: 0x%llX\n", pch_device);
 
 	if ((pch_device & 0x0000ffff) == 0x8086)
 	{
@@ -3089,7 +3091,7 @@ DEFINE_FUNC_VOID(getPCHDeviceID)
 //------------------------------------------------------------------------------
 // void AppleIntelInfo::reportIntelRegs(void)
 
-DEFINE_FUNC_VOID(reportIntelRegs)
+DEFINE_FUNC_VOID(AppleIntelInfo::reportIntelRegs)
 {
 	getPCHDeviceID();
 
@@ -3114,35 +3116,35 @@ DEFINE_FUNC_VOID(reportIntelRegs)
 				int64_t mmio = memoryMap->getVirtualAddress();
 				gMMIOAddress = mmio;
 
-				IOLog("CPU_VGACNTRL...............: 0x%X\n", MMIO_READ32(CPU_VGACNTRL));
+				IOLOG("\nIntel Register Data\n------------------------------------\nCPU_VGACNTRL...............: 0x%X\n", MMIO_READ32(CPU_VGACNTRL));
 
 				if (IS_HASWELL(devid) || IS_BROADWELL(devid))
 				{
-					IOLog("IS_HASWELL(devid) || IS_BROADWELL(devid)\n");
+					IOLOG("IS_HASWELL(devid) || IS_BROADWELL(devid)\n");
 					intel_dump_regs(haswell_debug_regs);
 				}
 				else if (IS_GEN5(devid) || IS_GEN6(devid) || IS_IVYBRIDGE(devid))
 				{
-					IOLog("IS_GEN5(devid) || IS_GEN6(devid) || IS_IVYBRIDGE(devid)\n");
+					IOLOG("IS_GEN5(devid) || IS_GEN6(devid) || IS_IVYBRIDGE(devid)\n");
 					intel_dump_regs(ironlake_debug_regs);
 				}
 				else if (IS_945GM(devid))
 				{
-					IOLog("IS_945GM(devid)\n");
+					IOLOG("IS_945GM(devid)\n");
 					intel_dump_regs(i945gm_mi_regs);
 					intel_dump_regs(intel_debug_regs);
 					intel_dump_other_regs();
 				}
 				else
 				{
-					IOLog("IS_ELSE(devid)\n");
+					IOLOG("IS_ELSE(devid)\n");
 					intel_dump_regs(intel_debug_regs);
 					intel_dump_other_regs();
 				}
 				
 				if (IS_GEN6(devid) || IS_GEN7(devid))
 				{
-					IOLog("IS_GEN6(devid) || IS_GEN7(devid)\n");
+					IOLOG("IS_GEN6(devid) || IS_GEN7(devid)\n");
 					intel_dump_regs(gen6_fences);
 					intel_dump_regs(gen6_rp_debug_regs);
 				}
