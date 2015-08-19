@@ -29,7 +29,7 @@
 
 #define super IOService
 
-#define VERSION					"1.0"
+#define VERSION					"1.1"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -173,10 +173,10 @@ private:
 	UInt64	gTriggeredIGPUPStates	= 0ULL;
 	
 public:
-	virtual IOService *	probe(IOService * provider, SInt32 * score);
-	virtual bool start(IOService * provider);
-	virtual void stop(IOService * provider);
-	virtual void free(void);
+	virtual IOService *	probe(IOService * provider, SInt32 * score) override;
+	virtual bool start(IOService * provider) override;
+	virtual void stop(IOService * provider) override;
+	virtual void free(void) override;
 	
 	UInt8	gMinRatio	= 0;
 	UInt8	gClockRatio	= 0;

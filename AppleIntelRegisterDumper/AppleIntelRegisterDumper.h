@@ -1668,7 +1668,7 @@ DEBUGSTRING(i830_debug_sdvo)
 	
 	if (IS_915(devid))
 	{
-		sprintf(sdvoextra, ", SDVO mult %d", (int)((val & SDVO_PORT_MULTIPLY_MASK) >> SDVO_PORT_MULTIPLY_SHIFT) + 1);
+		snprintf(sdvoextra, len, ", SDVO mult %d", (int)((val & SDVO_PORT_MULTIPLY_MASK) >> SDVO_PORT_MULTIPLY_SHIFT) + 1);
 	}
 	else
 	{
@@ -1902,7 +1902,7 @@ DEBUGSTRING(i830_debug_dpll)
 	
 	if (IS_945(devid))
 	{
-		sprintf(sdvoextra, ", SDVO mult %d", (int)((val & SDVO_MULTIPLIER_MASK) >> SDVO_MULTIPLIER_SHIFT_HIRES) + 1);
+		snprintf(sdvoextra, len, ", SDVO mult %d", (int)((val & SDVO_MULTIPLIER_MASK) >> SDVO_MULTIPLIER_SHIFT_HIRES) + 1);
 	}
 	else
 	{
