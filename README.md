@@ -35,12 +35,13 @@ Settings
 --------
 
 There are five (5) settings that you can change in AppleIntelInfo.kext/Contents/Info.plist:
-
+```
 logCStates
 logIGPU
 logIPGStyle
 logIntelRegs
 logMSRs
+```
 
 All set to YES by default.
 
