@@ -6,6 +6,8 @@
  * A big thank you to George for his help and continuation of Sam's work, but it
  * was time for me to push the envelope and add some really interesting stuff.
  *
+ * This work is licensed under the Creative Commons Attribution-NonCommercial
+ * 4.0 Unported License => http://creativecommons.org/licenses/by-nc/4.0
  */
 
 #pragma clang diagnostic push

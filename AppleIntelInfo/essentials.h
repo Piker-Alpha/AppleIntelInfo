@@ -1,3 +1,7 @@
+/*
+ * This work is licensed under the Creative Commons Attribution-NonCommercial
+ * 4.0 Unported License => http://creativecommons.org/licenses/by-nc/4.0
+ */
 
 #ifndef __LIBSAIO_CPU_ESSENTIALS_H
 #define __LIBSAIO_CPU_ESSENTIALS_H
