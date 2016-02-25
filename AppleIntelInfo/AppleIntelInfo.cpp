@@ -279,9 +279,9 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 		{ */
 			gCoreMultipliers |= (1ULL << pState);
 
-			if ((pState < currentMultiplier) && (pState < 8))
+			if ((pState < currentMultiplier) && (pState < gMinRatio))
 			{
-				pState = 8;
+				pState = gMinRatio;
 			}
 			/*
 			 * Commented out after fabio67 (fabiosun) confirmed that
