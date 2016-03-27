@@ -34,7 +34,7 @@
 
 #define super IOService
 
-#define VERSION					"1.3"
+#define VERSION					"1.4"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -155,7 +155,7 @@ private:
 	int writeReport(void);
 
 #if REPORT_MSRS
-	void reportMSRs(UInt8 aCPUModel);
+	void reportMSRs(void);
 
 	bool logMSRs		= true;		// Set <key>logIGPU</key> to <false/> in Info.plist to disable this feature.
 #endif
@@ -208,6 +208,7 @@ public:
 	UInt8	gMinRatio	= 0;
 	UInt8	gClockRatio	= 0;
 	UInt8	gMaxRatio	= 0;
+	UInt8	gCpuModel	= 0;
 };
 
 OSDefineMetaClassAndStructors(AppleIntelInfo, IOService)

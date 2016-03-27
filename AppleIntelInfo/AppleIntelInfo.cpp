@@ -63,7 +63,7 @@ int AppleIntelInfo::writeReport(void)
 
 //==============================================================================
 
-void AppleIntelInfo::reportMSRs(UInt8 aCPUModel)
+void AppleIntelInfo::reportMSRs(void)
 {
 	// 123456789 123456789 123456789 123456789 123456789 123456789
 	// MSR_PLATFORM_INFO..........(0xCE)  : 0x80838F3012200
@@ -108,7 +108,7 @@ void AppleIntelInfo::reportMSRs(UInt8 aCPUModel)
 	{
 //		IOLOG("MSR_PP1_CURRENT_CONFIG.....(0x602) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP1_CURRENT_CONFIG));
 
-		switch (aCPUModel)
+		switch (gCpuModel)
 		{
 			case CPU_MODEL_SB_CORE:				// 0x2A - Intel 325462.pdf Vol.3C 35-120
 			case CPU_MODEL_IB_CORE:				// 0x3A - Intel 325462.pdf Vol.3C 35-125 (Referring to Table 35-13)
@@ -126,7 +126,7 @@ void AppleIntelInfo::reportMSRs(UInt8 aCPUModel)
 	}
 #endif
 
-	switch (aCPUModel)
+	switch (gCpuModel)
 	{
 		case CPU_MODEL_IB_CORE:				// 0x3A - Intel 325462.pdf Vol.3C 35-126
 		case CPU_MODEL_IB_CORE_EX:			// 0x3B - Intel 325462.pdf Vol.3C 35-126
@@ -143,7 +143,7 @@ void AppleIntelInfo::reportMSRs(UInt8 aCPUModel)
 			break;
 	}
 
-	switch (aCPUModel)
+	switch (gCpuModel)
 	{
 		case CPU_MODEL_SB_CORE:	
 		case CPU_MODEL_IB_CORE:
@@ -168,7 +168,7 @@ void AppleIntelInfo::reportMSRs(UInt8 aCPUModel)
 		IOLOG("MSR_PKGC7_IRTL.............(0x60c) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC7_IRTL));
 	}
 
-	if (aCPUModel == CPU_MODEL_NEHALEM || aCPUModel == CPU_MODEL_NEHALEM_EX)
+	if (gCpuModel == CPU_MODEL_NEHALEM || gCpuModel == CPU_MODEL_NEHALEM_EX)
 	{
 		IOLOG("MSR_PKG_C3_RESIDENCY.......(0x3f8) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C3_RESIDENCY));
 	}
@@ -191,7 +191,7 @@ void AppleIntelInfo::reportMSRs(UInt8 aCPUModel)
 		IOLOG("MSR_PKG_C7_RESIDENCY.......(0x3fa) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C7_RESIDENCY));
 	}
 
-	if (aCPUModel == CPU_MODEL_HASWELL_ULT) // 0x45 - Intel 325462.pdf Vol.3C 35-136
+	if (gCpuModel == CPU_MODEL_HASWELL_ULT) // 0x45 - Intel 325462.pdf Vol.3C 35-136
 	{
 		IOLOG("MSR_PKG_C8_RESIDENCY.......(0x630) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
 		IOLOG("MSR_PKG_C9_RESIDENCY.......(0x631) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
@@ -250,7 +250,15 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 
 	if (igpuEnabled)
 	{
-		currentIgpuMultiplier = (UInt8)gMchbar[1];
+		if (gCpuModel == CPU_MODEL_SKYLAKE)
+		{
+			currentIgpuMultiplier = (UInt8)(((gMchbar[1] * 16.666) + 0.5) / 50);
+		}
+		else
+		{
+			currentIgpuMultiplier = (UInt8)gMchbar[1];
+		}
+
 		gIGPUMultipliers |= (1ULL << currentIgpuMultiplier);
 	}
 #endif
@@ -526,10 +534,10 @@ bool AppleIntelInfo::start(IOService *provider)
 			uint32_t cpuid_reg[4];
 			do_cpuid(0x00000001, cpuid_reg);
 			
-			UInt8 cpuModel = bitfield32(cpuid_reg[eax], 7,  4) + (bitfield32(cpuid_reg[eax], 19, 16) << 4);
-			
+			gCpuModel = bitfield32(cpuid_reg[eax], 7,  4) + (bitfield32(cpuid_reg[eax], 19, 16) << 4);
+
 #if REPORT_C_STATES
-			switch (cpuModel) // TODO: Verify me!
+			switch (gCpuModel) // TODO: Verify me!
 			{
 				case CPU_MODEL_SB_CORE:			// 0x2A - Intel 325462.pdf Vol.3C 35-111
 				case CPU_MODEL_SB_JAKETOWN:		// 0x2D - Intel 325462.pdf Vol.3C 35-111
@@ -560,7 +568,7 @@ bool AppleIntelInfo::start(IOService *provider)
 
 			if (logMSRs)
 			{
-				reportMSRs(cpuModel);
+				reportMSRs();
 			}
 #endif
 			
