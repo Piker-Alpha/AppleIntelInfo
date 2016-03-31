@@ -3580,6 +3580,14 @@ typedef enum {
 #define   IOSF_PORT_GPS_CORE			0x48
 #define   IOSF_PORT_FLISDSI			0x1B
 #define VLV_IOSF_DATA				(VLV_DISPLAY_BASE + 0x2104)
-#define VLV_IOSF_ADDR				(VLV_DISPLAY_BASE + 0x2108)
+#define	VLV_IOSF_ADDR				(VLV_DISPLAY_BASE + 0x2108)
+
+/* Some Skylake test registers */
+#define TRANS_DDI_FUNC_CTL_EDP	0x6f400
+#define TRANS_DDI_FUNC_CTL_A	0x60400
+#define TRANS_DDI_FUNC_CTL_B	0x61400
+#define TRANS_DDI_FUNC_CTL_C	0x62400
+
+
 
 #endif /* _I810_REG_H */

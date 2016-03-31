@@ -337,6 +337,9 @@ DEBUGSTRING(i830_debug_pipeconf)
 	const char *enabled = val & PIPEACONF_ENABLE ? "enabled" : "disabled";
 	const char *bit30 = NULL;
 	const char *interlace = NULL;
+    int interlace_mode;
+	char buf[256];
+	int buf_len;
 
 	if (IS_965(devid))
 	{
@@ -347,12 +350,22 @@ DEBUGSTRING(i830_debug_pipeconf)
 		bit30 = val & PIPEACONF_DOUBLE_WIDE ? "double-wide" : "single-wide";
 	}
 
-	if (HAS_PCH_SPLIT(devid))
+	if (HAS_PCH_SPLIT(devid) || IS_BROXTON(devid))
 	{
-		const char *bpc = NULL;
-		const char *rotation = NULL;
+		
+        
+        if (IS_IVYBRIDGE(devid) || IS_HASWELL(devid) || IS_BROADWELL(devid) || IS_GEN9(devid))
+        {
+            interlace_mode = (val >> 21) & 3;
+        }
+        else
+        {
+            interlace_mode = (val >> 21) & 7;
+        }
 
-		switch ((val >> 21) & 7)
+		buf_len = snprintf(buf, sizeof(buf), "%s, %s", enabled, bit30);
+
+		switch (interlace_mode)
 		{
 			case 0:
 				interlace = "pf-pd";
@@ -374,44 +387,13 @@ DEBUGSTRING(i830_debug_pipeconf)
 				break;
 		}
 
-		switch ((val >> 14) & 3)
+		if (buf_len < sizeof(buf))
 		{
-			case 0:
-				rotation = "rotate 0";
-				break;
-			case 1:
-				rotation = "rotate 90";
-				break;
-			case 2:
-				rotation = "rotate 180";
-				break;
-			case 3:
-				rotation = "rotate 270";
-				break;
+			buf_len += snprintf(&buf[buf_len], sizeof(buf) - buf_len, ", %s", interlace);
 		}
-
-		switch (val & (7 << 5))
-		{
-			case PIPECONF_8BPP:
-				bpc = "8bpc";
-				break;
-			case PIPECONF_10BPP:
-				bpc = "10bpc";
-				break;
-			case PIPECONF_6BPP:
-				bpc = "6bpc";
-				break;
-			case PIPECONF_12BPP:
-				bpc = "12bpc";
-				break;
-			default:
-				bpc = "invalid bpc";
-				break;
-		}
-
-		snprintf(result, len, "%s, %s, %s, %s, %s", enabled, bit30, interlace, rotation, bpc);
+		
 	}
-	else if (IS_GEN4(devid))
+	else if (IS_GEN4(devid) || IS_VALLEYVIEW(devid) || IS_CHERRYVIEW(devid))
 	{
 		switch ((val >> 21) & 7)
 		{
@@ -435,12 +417,68 @@ DEBUGSTRING(i830_debug_pipeconf)
 				break;
 		}
 
-		snprintf(result, len, "%s, %s, %s", enabled, bit30, interlace);
+		if (buf_len < sizeof(buf))
+		{
+			buf_len += snprintf(&buf[buf_len], sizeof(buf) - buf_len, ", %s", interlace);
+		}
 	}
-	else
+	
+	if (IS_HASWELL(devid) || IS_IVYBRIDGE(devid) || IS_GEN6(devid) || IS_GEN5(devid))
 	{
-		snprintf(result, len, "%s, %s", enabled, bit30);
+		const char *rotation = NULL;
+
+		switch ((val >> 14) & 3)
+		{
+			case 0:
+				rotation = "rotate 0";
+				break;
+			case 1:
+				rotation = "rotate 90";
+				break;
+			case 2:
+				rotation = "rotate 180";
+				break;
+			case 3:
+				rotation = "rotate 270";
+				break;
+		}
+
+		if (buf_len < sizeof(buf))
+		{
+			buf_len += snprintf(&buf[buf_len], sizeof(buf) - buf_len, ", %s", rotation);
+		}
 	}
+
+	if (IS_IVYBRIDGE(devid) || IS_GEN6(devid) || IS_GEN5(devid))
+	{
+		const char *bpc = NULL;
+
+		switch (val & (7 << 5))
+		{
+			case PIPECONF_8BPP:
+				bpc = "8bpc";
+				break;
+			case PIPECONF_10BPP:
+				bpc = "10bpc";
+				break;
+			case PIPECONF_6BPP:
+				bpc = "6bpc";
+				break;
+			case PIPECONF_12BPP:
+				bpc = "12bpc";
+				break;
+			default:
+				bpc = "invalid bpc";
+				break;
+		}
+		
+		if (buf_len < sizeof(buf))
+		{
+			buf_len += snprintf(&buf[buf_len], sizeof(buf) - buf_len, ", %s", bpc);
+		}
+	}
+
+	snprintf(result, len, "%s", buf);
 }
 
 //------------------------------------------------------------------------------
@@ -2764,6 +2802,16 @@ static struct reg_debug haswell_debug_regs[] = {
 
 //------------------------------------------------------------------------------
 
+static struct reg_debug skylake_debug_regs[] = {
+	/* DDI pipe function */
+	DEFINEREG2(TRANS_DDI_FUNC_CTL_EDP,	hsw_debug_pipe_ddi_func_ctl),
+	DEFINEREG2(TRANS_DDI_FUNC_CTL_A, hsw_debug_pipe_ddi_func_ctl),
+	DEFINEREG2(TRANS_DDI_FUNC_CTL_B, hsw_debug_pipe_ddi_func_ctl),
+	DEFINEREG2(TRANS_DDI_FUNC_CTL_C, hsw_debug_pipe_ddi_func_ctl),
+};
+
+//------------------------------------------------------------------------------
+
 static struct reg_debug i945gm_mi_regs[] = {
 	DEFINEREG(PGETBL_CTL),
 	DEFINEREG(PGTBL_ER),
@@ -3100,8 +3148,8 @@ DEFINE_FUNC_VOID(AppleIntelInfo::reportIntelRegs)
 
 	IOPhysicalAddress address = (IOPhysicalAddress)(mmio);
 
-	// 4 MB combined for MMIO (2 MB) and Global GTT table aperture (2 MB).
-	IOMemoryDescriptor * memDescriptor = IOMemoryDescriptor::withPhysicalAddress(address, 0x400000, kIODirectionInOut);
+	// 16 MB combined for MMIO and Global GTT table aperture (2MB for MMIO, 6MB reserved and 8MB for GTT).
+	IOMemoryDescriptor * memDescriptor = IOMemoryDescriptor::withPhysicalAddress(address, 0x1000000, kIODirectionInOut);
 
 	if (memDescriptor != NULL)
 	{
@@ -3118,7 +3166,13 @@ DEFINE_FUNC_VOID(AppleIntelInfo::reportIntelRegs)
 
 				IOLOG("\nIntel Register Data\n------------------------------------\nCPU_VGACNTRL...............: 0x%X\n", MMIO_READ32(CPU_VGACNTRL));
 
-				if (IS_HASWELL(devid) || IS_BROADWELL(devid))
+				if (IS_SKYLAKE(devid))
+				{
+					IOLOG("IS_SKYLAKE(devid)\n");
+					intel_dump_regs(haswell_debug_regs);
+					intel_dump_regs(skylake_debug_regs);
+				}
+				else if (IS_HASWELL(devid) || IS_BROADWELL(devid))
 				{
 					IOLOG("IS_HASWELL(devid) || IS_BROADWELL(devid)\n");
 					intel_dump_regs(haswell_debug_regs);
