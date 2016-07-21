@@ -34,13 +34,15 @@
 
 #define super IOService
 
-#define VERSION					"1.4"
+#define VERSION					"1.5"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
 #define REPORT_C_STATES			1
 #define REPORT_IPG_STYLE		1
-#define REPORT_INTEL_REGS		1
+#define REPORT_INTEL_REGS		0
+
+#define WRITE_LOG_REPORT		1
 
 #define MMIO_READ8(Address)			(*(volatile UInt8  *)(Address))
 #define MMIO_READ16(Address)		(*(volatile UInt16 *)(Address))
@@ -74,18 +76,23 @@
 ((UInt32)(PCIEX_BASE_ADDRESS + ((UInt8)(bus) << 20) + \
 ((UInt8)(dev) << 15) + ((UInt8)(func) << 12) + (reg)))
 
-#define	FILE_PATH "/tmp/AppleIntelInfo.dat"
+#if WRITE_LOG_REPORT
+	#define	FILE_PATH "/tmp/AppleIntelInfo.dat"
 
-#define TEMP_BUFFER_SIZE	256
-#define WRITE_BUFFER_SIZE	1024
+	#define TEMP_BUFFER_SIZE	256
+	#define WRITE_BUFFER_SIZE	1024
 
-int tempBufferLength = 0;
+	int tempBufferLength = 0;
 
-#define IOLOG(fmt, args...)								\
-memset(logBuffer, 0, TEMP_BUFFER_SIZE);				\
-snprintf(logBuffer, TEMP_BUFFER_SIZE, fmt, ##args);	\
-writeReport();
+	#define IOLOG(fmt, args...)								\
+	memset(logBuffer, 0, TEMP_BUFFER_SIZE);				\
+	snprintf(logBuffer, TEMP_BUFFER_SIZE, fmt, ##args);	\
+	writeReport();
+#else
+	#include <os/log.h>
 
+	#define IOLOG(fmt, args...) os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_INFO, fmt, ##args)
+#endif
 
 //------------------------------------------------------------------------------
 
@@ -196,8 +203,10 @@ private:
 	vfs_context_t mCtx				= NULL;
 	long reportFileOffset			= 0L;
 
+#if WRITE_LOG_REPORT
 	char tempBuffer[TEMP_BUFFER_SIZE];
 	char logBuffer[WRITE_BUFFER_SIZE];
+#endif
 
 public:
 	virtual IOService *	probe(IOService * provider, SInt32 * score) override;

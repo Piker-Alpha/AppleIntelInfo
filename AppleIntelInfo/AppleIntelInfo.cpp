@@ -12,7 +12,7 @@
 
 #include "AppleIntelInfo.h"
 
-
+#if WRITE_LOG_REPORT
 //==============================================================================
 
 int AppleIntelInfo::writeReport(void)
@@ -60,15 +60,18 @@ int AppleIntelInfo::writeReport(void)
 	
 	return error;
 }
+#endif
 
 //==============================================================================
 
 void AppleIntelInfo::reportMSRs(void)
 {
+	uint32_t cpuid_reg[4];
+
 	// 123456789 123456789 123456789 123456789 123456789 123456789
 	// MSR_PLATFORM_INFO..........(0xCE)  : 0x80838F3012200
 	
-	IOLOG("\nModel Specific Regiters\n------------------------------------\nMSR_CORE_THREAD_COUNT......(0x35)  : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CORE_THREAD_COUNT));
+	IOLOG("\nModel Specific Registers\n-----------------------------------\nMSR_CORE_THREAD_COUNT......(0x35)  : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CORE_THREAD_COUNT));
 
 	IOLOG("MSR_PLATFORM_INFO..........(0xCE)  : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PLATFORM_INFO));
 
@@ -97,11 +100,30 @@ void AppleIntelInfo::reportMSRs(void)
 	IOLOG("MSR_PKG_POWER_LIMIT........(0x610) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_POWER_LIMIT));
 	IOLOG("MSR_PKG_ENERGY_STATUS......(0x611) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_ENERGY_STATUS));
 	IOLOG("MSR_PKG_POWER_INFO.........(0x614) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_POWER_INFO));
+	
+	switch (gCpuModel)
+	{
+		case CPU_MODEL_SB_CORE:				// 0x2A - Intel 325462.pdf Vol.3C 35-120
+			IOLOG("MSR_PP0_CURRENT_CONFIG.....(0x601) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_CURRENT_CONFIG));
+			break;
+	}
 
-	IOLOG("MSR_PP0_CURRENT_CONFIG.....(0x601) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_CURRENT_CONFIG));
 	IOLOG("MSR_PP0_POWER_LIMIT........(0x638) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_POWER_LIMIT));
 	IOLOG("MSR_PP0_ENERGY_STATUS......(0x639) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_ENERGY_STATUS));
-	IOLOG("MSR_PP0_POLICY.............(0x63a) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_POLICY));
+
+	switch (gCpuModel)
+	{
+		case CPU_MODEL_SB_CORE:				// 0x2A - Intel 325462.pdf Vol.3C 35-120
+			IOLOG("MSR_PP0_POLICY.............(0x63a) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_POLICY));
+			break;
+	}
+
+	do_cpuid(0x00000007, cpuid_reg);
+
+	if ((cpuid_reg[eax] & 0x80) == 0x80)
+	{
+		IOLOG("IA32_PM_ENABLE.............(0x770) : 0x%llX\n", (unsigned long long)rdmsr64(0x770));
+	}
 
 #if REPORT_IGPU_P_STATES
 	if (igpuEnabled)
@@ -163,10 +185,12 @@ void AppleIntelInfo::reportMSRs(void)
 
 	IOLOG("MSR_PKGC6_IRTL.............(0x60b) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC6_IRTL));
 
+#if REPORT_C_STATES
 	if (gCheckC7)
 	{
 		IOLOG("MSR_PKGC7_IRTL.............(0x60c) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC7_IRTL));
 	}
+#endif
 
 	if (gCpuModel == CPU_MODEL_NEHALEM || gCpuModel == CPU_MODEL_NEHALEM_EX)
 	{
@@ -186,10 +210,12 @@ void AppleIntelInfo::reportMSRs(void)
 	
 	IOLOG("MSR_PKG_C6_RESIDENCY.......(0x3f9) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C6_RESIDENCY));
 
+#if REPORT_C_STATES
 	if (gCheckC7)
 	{
 		IOLOG("MSR_PKG_C7_RESIDENCY.......(0x3fa) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C7_RESIDENCY));
 	}
+#endif
 
 	if (gCpuModel == CPU_MODEL_HASWELL_ULT) // 0x45 - Intel 325462.pdf Vol.3C 35-136
 	{
@@ -206,6 +232,7 @@ void AppleIntelInfo::reportMSRs(void)
 }
 
 
+#if REPORT_C_STATES
 //==============================================================================
 
 inline void getCStates(void *magic)
@@ -237,6 +264,7 @@ inline void getCStates(void *magic)
 		IOLog("Error: TSC of logical core %d is out of sync (0x%llx)!\n", logicalCoreNumber, msr);
 	}
 }
+#endif
 
 //==============================================================================
 
@@ -272,6 +300,8 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 
 	loopLock = true;
 
+	UInt8 pState = 0;
+
 #if REPORT_IPG_STYLE
 	if (logIPGStyle)
 	{
@@ -281,7 +311,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 		wrmsr64(IA32_APERF, 0ULL);
 //	UInt16 busy = ((aPerf * 100) / mPerf);
 		float busy = ((aPerf * 100) / mPerf);
-		UInt8 pState = (UInt8)(((gClockRatio + 0.5) * busy) / 100);
+		/* UInt8 */ pState = (UInt8)(((gClockRatio + 0.5) * busy) / 100);
 
 /*		if (pState != currentMultiplier)
 		{ */
@@ -456,7 +486,8 @@ bool AppleIntelInfo::start(IOService *provider)
 		{
 			mCtx = vfs_context_current();
 
-			IOLOG("\nAppleIntelInfo.kext v%s Copyright © 2012-2015 Pike R. Alpha. All rights reserved\n", VERSION);
+			IOLOG("\nAppleIntelInfo.kext v%s Copyright © 2012-2016 Pike R. Alpha. All rights reserved\n", VERSION);
+			// os_log_info(OS_LOG_DEFAULT, "v%s Copyright © 2012-2016 Pike R. Alpha. All rights reserved", VERSION);
 #if REPORT_MSRS
 			OSBoolean * key_logMSRs = OSDynamicCast(OSBoolean, getProperty("logMSRs"));
 
@@ -488,7 +519,7 @@ bool AppleIntelInfo::start(IOService *provider)
 			}
 
 			IOLOG("logIGPU............................: %d\n", igpuEnabled);
-			
+
 //			wrmsr64(MSR_PP1_POWER_LIMIT, 0);
 #endif
 
@@ -550,7 +581,8 @@ bool AppleIntelInfo::start(IOService *provider)
 				case CPU_MODEL_HASWELL_ULT:		// 0x45 - Intel 325462.pdf Vol.3C 35-136
 				case CPU_MODEL_CRYSTALWELL:		// 0x46
 				case CPU_MODEL_BRYSTALWELL:		// 0x47
-				case CPU_MODEL_SKYLAKE:			// 0x5E
+				case CPU_MODEL_SKYLAKE:			// 0x4E
+				case CPU_MODEL_SKYLAKE_DT:		// 0x5E
 					gCheckC7 = true;
 					break;
 			}
@@ -571,7 +603,7 @@ bool AppleIntelInfo::start(IOService *provider)
 				reportMSRs();
 			}
 #endif
-			
+
 #if REPORT_INTEL_REGS
 			if (logIntelRegs)
 			{
