@@ -197,7 +197,7 @@ void AppleIntelInfo::reportMSRs(void)
 	}
 	else
 	{
-		IOLOG(" - Number of ConfigTDP Levels........ : %llu (additional TDP level(s) available)\n", bitfield32(msr, 34, 33));
+		IOLOG(" - Number of ConfigTDP Levels......... : %llu (additional TDP level(s) available)\n", bitfield32(msr, 34, 33));
 	}
 
 	IOLOG(" - Maximum Efficiency Ratio........... : %llu\n", bitfield32(msr, 47, 40));
@@ -285,12 +285,12 @@ void AppleIntelInfo::reportMSRs(void)
 
 	IOLOG("\nIA32_MISC_ENABLES..............(0x1A0) : 0x%llX\n", msr);
 	IOLOG("----------------------------------------\n");
-	IOLOG(" - Fast-Strings....................... : %s\n", (1 <<  0) ? "1 (enabled)" : "0 (disabled)");
+	IOLOG(" - Fast-Strings....................... : %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
 
-	IOLOG(" - Automatic Thermal Control Circuit.. : %s\n", (1 <<  3) ? "1 (enabled)" : "0 (disabled)");
+	IOLOG(" - Automatic Thermal Control Circuit.. : %s\n", (msr & (1 <<  3)) ? "1 (enabled)" : "0 (disabled)");
 
-	IOLOG(" - Performance Monitoring............. : %s\n", (1 <<  7) ? "1 (available)" : "not available");
-	IOLOG(" - Enhanced Intel SpeedStep Technology : %s\n", (1 << 15) ? "1 (enabled)" : "0 (disabled)");
+	IOLOG(" - Performance Monitoring............. : %s\n", (msr & (1 <<  7)) ? "1 (available)" : "not available");
+	IOLOG(" - Enhanced Intel SpeedStep Technology : %s\n", (msr & (1 << 16)) ? "1 (enabled)" : "0 (disabled)");
 
 	msr = rdmsr64(MSR_MISC_PWR_MGMT);
 
@@ -303,7 +303,7 @@ void AppleIntelInfo::reportMSRs(void)
 	IOLOG("\nMSR_TURBO_RATIO_LIMIT..........(0x1AD) : 0x%llX\n", msr);
 	IOLOG("----------------------------------------\n");
 	
-	for (int i = 0; (i < 8) && (i < number_of_cores); i++)
+	for (int i = 1; (i < 9) && (i < number_of_cores); i++)
 	{
 		core_limit = bitfield32(msr, 7, 0);
 		
@@ -324,7 +324,7 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG("\nMSR_TURBO_RATIO_LIMIT1.........(0x1AE) : 0x%llX\n", msr);
 		IOLOG("----------------------------------------\n");
 	
-		for (int i = 0; (i < 16) && (i < number_of_cores); i++)
+		for (int i = 9; (i < 17) && (i < number_of_cores); i++)
 		{
 			core_limit = bitfield32(msr, 7, 0);
 		
@@ -346,7 +346,7 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG("\nMSR_TURBO_RATIO_LIMIT2.........(0x1AF) : 0x%llX\n", msr);
 		IOLOG("----------------------------------------\n");
 	
-		for (int i = 0; (i < 32) && (i < number_of_cores); i++)
+		for (int i = 17; (i < 33) && (i < number_of_cores); i++)
 		{
 			core_limit = bitfield32(msr, 7, 0);
 		
@@ -897,10 +897,14 @@ bool AppleIntelInfo::start(IOService *provider)
 					break;
 			}
 #endif
+			
+			msr = rdmsr64(MSR_PLATFORM_INFO);
+			gMinRatio = (UInt8)((msr >> 40) & 0xff);
+			gClockRatio = (UInt8)((msr >> 8) & 0xff);
 
 #if REPORT_MSRS
 			gTSC = rdtsc64();
-			IOLOG("InitialTSC.........................: 0x%llx\n", gTSC);
+			IOLOG("InitialTSC.........................: 0x%llx (%llu MHz)\n", gTSC, ((gTSC / gClockRatio) / 1000000000));
 
 			// MWAIT information
 			do_cpuid(0x00000005, cpuid_reg);
@@ -928,11 +932,8 @@ bool AppleIntelInfo::start(IOService *provider)
 				}
 			}
 #endif
-			msr = rdmsr64(MSR_PLATFORM_INFO);
-			gMinRatio = (UInt8)((msr >> 40) & 0xff);
+
 			IOLOG("\nCPU Ratio Info:\n----------------------------------------\nCPU Maximum Efficiency Ratio...........: %2d00 MHz\n", gMinRatio);
-			
-			gClockRatio = (UInt8)((msr >> 8) & 0xff);
 			IOLOG("CPU Maximum non-Turbo Frequency........: %d00 MHz\n", gClockRatio);
 			
 			if (!((rdmsr64(IA32_MISC_ENABLES) >> 32) & 0x40))	// Turbo Mode Enabled?
