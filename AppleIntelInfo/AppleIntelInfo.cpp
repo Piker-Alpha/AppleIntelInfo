@@ -303,7 +303,7 @@ void AppleIntelInfo::reportMSRs(void)
 	IOLOG("\nMSR_TURBO_RATIO_LIMIT..........(0x1AD) : 0x%llX\n", msr);
 	IOLOG("----------------------------------------\n");
 	
-	for (int i = 1; (i < 9) && (i < number_of_cores); i++)
+	for (int i = 1; (i < 9) && (i <= number_of_cores); i++)
 	{
 		core_limit = bitfield32(msr, 7, 0);
 		
@@ -324,7 +324,7 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG("\nMSR_TURBO_RATIO_LIMIT1.........(0x1AE) : 0x%llX\n", msr);
 		IOLOG("----------------------------------------\n");
 	
-		for (int i = 9; (i < 17) && (i < number_of_cores); i++)
+		for (int i = 9; (i < 17) && (i <= number_of_cores); i++)
 		{
 			core_limit = bitfield32(msr, 7, 0);
 		
@@ -346,7 +346,7 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG("\nMSR_TURBO_RATIO_LIMIT2.........(0x1AF) : 0x%llX\n", msr);
 		IOLOG("----------------------------------------\n");
 	
-		for (int i = 17; (i < 33) && (i < number_of_cores); i++)
+		for (int i = 17; (i < 33) && (i <= number_of_cores); i++)
 		{
 			core_limit = bitfield32(msr, 7, 0);
 		
