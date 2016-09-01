@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2015 Pike R. Alpha. All rights reserved.
+ * Copyright (c) 2012-2016 Pike R. Alpha. All rights reserved.
  *
  * Original idea and initial development of MSRDumper.kext (c) 2011 by † RevoGirl.
  *
@@ -34,7 +34,7 @@
 
 #define super IOService
 
-#define VERSION					"1.5"
+#define VERSION					"1.6"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -163,9 +163,12 @@ private:
 
 #if REPORT_MSRS
 	void reportMSRs(void);
+	void reportHWP(void);
 
 	bool logMSRs		= true;		// Set <key>logIGPU</key> to <false/> in Info.plist to disable this feature.
 #endif
+
+	bool gHwpEnabled	= false;
 
 	bool loopLock		= false;
 

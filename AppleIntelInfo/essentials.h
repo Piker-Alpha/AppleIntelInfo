@@ -7,11 +7,10 @@
 #define __LIBSAIO_CPU_ESSENTIALS_H
 
 
-/* Copied from xnu/osfmk/cpuid.c */
+/* Copied from xnu/osfmk/cpuid.c (modified for 64-bit values) */
 #define bit(n)				(1UL << (n))
-#define bitmask32(h, l)		((bit(h) | (bit(h) - 1)) & ~ (bit(l) - 1))
-#define bitfield32(x, h, l)	(((x) & bitmask32(h, l)) >> l)
-
+#define bitmask64(h, l)		((bit(h) | (bit(h) - 1)) & ~ (bit(l) - 1))
+#define bitfield32(x, h, l)	(((x) & bitmask64(h, l)) >> l)
 
 // Added by DHP in 2010.
 #define CPU_VENDOR_INTEL	0x756E6547
@@ -33,6 +32,7 @@
 #define MSR_PMG_IO_CAPTURE_BASE		0xE4
 #define IA32_MPERF					0xE7
 #define IA32_APERF					0xE8
+#define IA32_PPERF					0x64E
 
 #define	MSR_IA32_PERF_STATUS		0x0198	// MSR_IA32_PERF_STS in XNU
 #define	MSR_IA32_PERF_CONTROL		0x0199	// IA32_PERF_CTL
@@ -48,6 +48,8 @@
 #define MSR_TEMPERATURE_TARGET		0x01A2
 #define MSR_MISC_PWR_MGMT			0x01AA
 #define	MSR_TURBO_RATIO_LIMIT		0x01AD
+#define	MSR_TURBO_RATIO_LIMIT1		0x01AE
+#define	MSR_TURBO_RATIO_LIMIT2		0x01AF
 
 #define IA32_ENERGY_PERF_BIAS		0x01B0
 #define IA32_PLATFORM_DCA_CAP		0x01F8
@@ -116,6 +118,14 @@
 #define MSR_CONFIG_TDP_LEVEL2		0x64A
 #define MSR_CONFIG_TDP_CONTROL		0x64B
 #define MSR_TURBO_ACTIVATION_RATIO	0x64C
+
+// HPW MSR's
+#define IA32_PM_ENABLE				0x770
+#define IA32_HWP_CAPABILITIES		0x771
+#define IA32_HWP_REQUEST_PKG		0x772
+#define IA32_HWP_INTERRUPT			0x773
+#define IA32_HWP_REQUEST			0x774
+#define IA32_HWP_STATUS				0x777
 
 // CPUID leaf index values (pointing to the right spot in CPUID/LEAF array).
 
