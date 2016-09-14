@@ -163,14 +163,76 @@ void AppleIntelInfo::reportHWP(void)
 
 //==============================================================================
 
+uint32_t AppleIntelInfo::getBusFrequency(void)
+{
+	size_t size = 4;
+	uint32_t frequency = 0;
+
+	if (sysctlbyname("hw.busfrequency", &frequency, &size, NULL, 0) == 0)
+	{
+		return frequency;
+	}
+
+	return 0;
+}
+
+
+//==============================================================================
+
+const char * AppleIntelInfo::getUnitText(uint8_t unit)
+{
+	const char * milliText[10] = { "1 ", "500 milli-", "250 milli-", "125 milli-", "62.5 milli-", "31.2 milli-", "15.6 milli-", "7.8 milli-", "3.9 milli-", "2 milli-" };
+	const char * microText[7] = { "976.6 micro-", "488.3 micro-", "244.1 micro-", "122.1 micro-", "61 micro-", "30.5 micro-", "15.3 micro-" };
+
+	if (unit <= 9)
+	{
+		return milliText[unit];
+	}
+	else
+	{
+		return microText[unit-10];
+	}
+
+	return NULL;
+}
+
+//==============================================================================
+
 void AppleIntelInfo::reportMSRs(void)
 {
 	uint8_t core_limit;
 	uint8_t number_of_cores;
+	uint32_t performanceState;
 	uint32_t cpuid_reg[4];
-	unsigned long long msr;
+	uint64_t msr;
+
+	char brandstring[48];
+
+	do_cpuid(0x80000002, cpuid_reg);	// First 16 bytes.
+	bcopy((char *)cpuid_reg, &brandstring[0], 16);
+ 
+	do_cpuid(0x80000003, cpuid_reg);	// Next 16 bytes.
+	bcopy((char *)cpuid_reg, &brandstring[16], 16);
+	
+	do_cpuid(0x80000004, cpuid_reg);	// Last 16 bytes.
+	bcopy((char *)cpuid_reg, &brandstring[32], 16);
+	
+	IOLOG("\nProcessor Brandstring..................: %s\n", brandstring);
+
+	do_cpuid(0x00000001, cpuid_reg);
+	uint8_t model = (bitfield32(cpuid_reg[eax], 19, 16) << 4) + bitfield32(cpuid_reg[eax],  7,  4);
+
+	IOLOG("\nProcessor Signature................... : 0x%X\n", cpuid_reg[eax]);
+	IOLOG("----------------------------------------\n");
+	IOLOG(" - Family............................. : %lu\n", bitfield32(cpuid_reg[eax], 11,  8));
+	IOLOG(" - Stepping........................... : %lu\n", bitfield32(cpuid_reg[eax],  3,  0));
+	IOLOG(" - Model.............................. : 0x%X (%d)\n", model, model);
+
 	
 	do_cpuid(0x00000006, cpuid_reg);
+
+	uint32_t busFrequency = getBusFrequency();
+	uint16_t bclk = (busFrequency / 1000000);
 
 	msr = rdmsr64(MSR_CORE_THREAD_COUNT);
 
@@ -235,13 +297,13 @@ void AppleIntelInfo::reportMSRs(void)
 	{
 		switch(bitfield32(msr, 18, 16))
 		{
-			case 0: IOLOG(" - C-state Range...................... : %llu (%s)\n", bitfield32(msr, 18, 16), "C3 is the max C-State to include\n");
+			case 0: IOLOG(" - C-state Range...................... : %llu (%s)\n", bitfield32(msr, 18, 16), "C3 is the max C-State to include");
 				break;
 
-			case 1: IOLOG(" - C-state Range...................... : %llu (%s)\n", bitfield32(msr, 18, 16), "C6 is the max C-State to include\n");
+			case 1: IOLOG(" - C-state Range...................... : %llu (%s)\n", bitfield32(msr, 18, 16), "C6 is the max C-State to include");
 				break;
 
-			case 2: IOLOG(" - C-state Range...................... : %llu (%s)\n", bitfield32(msr, 18, 16), "C7 is the max C-State to include\n");
+			case 2: IOLOG(" - C-state Range...................... : %llu (%s)\n", bitfield32(msr, 18, 16), "C7 is the max C-State to include");
 				break;
 		}
 	}
@@ -262,16 +324,18 @@ void AppleIntelInfo::reportMSRs(void)
 	IOLOG("----------------------------------------\n");
 
 	msr = rdmsr64(MSR_IA32_PERF_STATUS);
+	performanceState = bitfield32(msr, 15, 0);
 
 	IOLOG("\nMSR_IA32_PERF_STATUS...........(0x198) : 0x%llX\n", msr);
 	IOLOG("----------------------------------------\n");
-	IOLOG(" - Current Performance State Value.... : 0x%llx\n", bitfield32(msr, 15, 0));
+	IOLOG(" - Current Performance State Value.... : 0x%X (%u MHz)\n", performanceState, ((performanceState >> 8) * bclk));
 
 	msr = rdmsr64(MSR_IA32_PERF_CONTROL);
+	performanceState = bitfield32(msr, 15, 0);
 
 	IOLOG("\nMSR_IA32_PERF_CONTROL..........(0x199) : 0x%llX\n", msr);
 	IOLOG("----------------------------------------\n");
-	IOLOG(" - Target performance State Value..... : 0x%llX\n", bitfield32(msr, 15, 0));
+	IOLOG(" - Target performance State Value..... : 0x%X (%u MHz)\n", performanceState, ((performanceState >> 8) * bclk));
 
 	if (cpuid_reg[eax] & (1 << 0))
 	{
@@ -309,7 +373,7 @@ void AppleIntelInfo::reportMSRs(void)
 		
 		if (core_limit)
 		{
-			IOLOG(" - Maximum Ratio Limit for C%02d........ : %d %s\n", i, core_limit, ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+			IOLOG(" - Maximum Ratio Limit for C%02d........ : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 
 			msr = (msr >> 8);
 		}
@@ -330,7 +394,7 @@ void AppleIntelInfo::reportMSRs(void)
 		
 			if (core_limit)
 			{
-				IOLOG(" - Maximum Ratio Limit for C%02d........ : %d %s\n", i, core_limit, ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+				IOLOG(" - Maximum Ratio Limit for C%02d........ : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 		
 				msr = (msr >> 8);
 			}
@@ -352,7 +416,7 @@ void AppleIntelInfo::reportMSRs(void)
 		
 			if (core_limit)
 			{
-				IOLOG(" - Maximum Ratio Limit for C%02d........ : %d %s\n", i, core_limit, ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+				IOLOG(" - Maximum Ratio Limit for C%02d........ : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 		
 				msr = (msr >> 8);
 			}
@@ -380,28 +444,95 @@ void AppleIntelInfo::reportMSRs(void)
 			break;
 	}
 
-
 	IOLOG("\nMSR_POWER_CTL..................(0x1FC) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_POWER_CTL));
+	IOLOG("----------------------------------------\n");
 
-	IOLOG("MSR_RAPL_POWER_UNIT............(0x606) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_RAPL_POWER_UNIT));
-	IOLOG("MSR_PKG_POWER_LIMIT............(0x610) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_POWER_LIMIT));
-	IOLOG("MSR_PKG_ENERGY_STATUS..........(0x611) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_ENERGY_STATUS));
-	IOLOG("MSR_PKG_POWER_INFO.............(0x614) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_POWER_INFO));
+	msr = rdmsr64(MSR_RAPL_POWER_UNIT);
+
+	uint8_t power_unit = bitfield32(msr, 3, 0);
+	uint8_t energy_status_unit = bitfield32(msr, 12, 8);
+	uint8_t time_unit = bitfield32(msr, 19, 16);
+
+	float joulesPerEnergyUnit = 1. / float(1ULL << energy_status_unit);
+
+	IOLOG("\nMSR_RAPL_POWER_UNIT............(0x606) : 0x%llX\n", msr);
+	IOLOG("----------------------------------------\n");
+	IOLOG(" - Power Units........................ : %u (1/%d Watt)\n", power_unit, (1 << power_unit));
+	IOLOG(" - Energy Status Units................ : %u (%sJoules)\n", energy_status_unit, getUnitText( energy_status_unit));
+	IOLOG(" - Time Units ........................ : %u (%sSeconds)\n", time_unit, getUnitText(time_unit));
+
+	msr = rdmsr64(MSR_PKG_POWER_LIMIT);
+
+	IOLOG("\nMSR_PKG_POWER_LIMIT............(0x610) : 0x%llX\n", msr);
+	IOLOG("----------------------------------------\n");
+	IOLOG(" - Package Power Limit #1............. : %llu Watt\n", (bitfield32(msr, 14, 0) >> power_unit));
+	IOLOG(" - Enable Power Limit #1.............. : %s\n", bitfield32(msr, 15, 15) ? "1 (enabled)": "0 (disabled)");
+	IOLOG(" - Package Clamping Limitation #1..... : %s\n", bitfield32(msr, 16, 16) ? "1 (allow going below OS-requested P/T state during Time Window for Power Limit #1)": "0 (disabled)");
+
+	unsigned int Y = bitfield32(msr, 21, 17);
+	unsigned int Z = bitfield32(msr, 23, 22);
+
+	IOLOG(" - Time Window for Power Limit #1..... : %llu (%u milli-Seconds)\n", bitfield32(msr, 23, 17), (unsigned int)(((1 << Y) * (1.0 + Z) / 4.0) * time_unit));
+	IOLOG(" - Package Power Limit #2............. : %llu Watt\n", (bitfield32(msr, 46, 32) >> power_unit));
+	IOLOG(" - Enable Power Limit #2.............. : %s\n", (msr & (1UL << 47)) ? "1 (enabled)": "0 (disabled)");
+	IOLOG(" - Package Clamping Limitation #2..... : %s\n", (msr & (1UL << 48)) ? "1 (allow going below OS-requested P/T state setting Time Window for Power Limit #2)": "0 (disabled)");
+
+	Y = bitfield32(msr, 53, 49);
+	Z = bitfield32(msr, 55, 54);
 	
+	IOLOG(" - Time Window for Power Limit #2..... : %llu (%u milli-Seconds)\n", bitfield32(msr, 55, 49), (unsigned int)(((1 << Y) * (1.0 + Z) / 4.0) * time_unit));
+	IOLOG(" - Lock............................... : %s\n", bitfield32(msr, 63, 63) ? "1 (MSR locked until next reset)": "0 (MSR not locked)");
+
+	msr = rdmsr64(MSR_PKG_ENERGY_STATUS);
+
+	IOLOG("\nMSR_PKG_ENERGY_STATUS..........(0x611) : 0x%llX\n", msr);
+	IOLOG("----------------------------------------\n");
+	IOLOG(" - Total Energy Consumed.............. : %llu Joules (Watt = Joules / seconds)\n", (long long unsigned)(bitfield32(msr, 31, 0) * joulesPerEnergyUnit));
+
+	msr = rdmsr64(MSR_PKG_POWER_INFO);
+
+	IOLOG("\nMSR_PKG_POWER_INFO.............(0x614) : 0x%llX\n", msr);
+	IOLOG("----------------------------------------\n");
+	IOLOG(" - Thermal Spec Power................. : %llu Watt\n", (bitfield32(msr, 14, 0) >> power_unit));
+	IOLOG(" - Minimum Power...................... : %llu\n", (bitfield32(msr, 16, 30) >> power_unit));
+	IOLOG(" - Maximum Power...................... : %llu\n", (bitfield32(msr, 46, 32) >> power_unit));
+	IOLOG(" - Maximum Time Window................ : %llu\n", (bitfield32(msr, 58, 48) >> time_unit));
+
 	if (gCpuModel == CPU_MODEL_SB_CORE) // 0x2A - Intel 325462.pdf Vol.3C 35-120
 	{
-		IOLOG("MSR_PP0_CURRENT_CONFIG.........(0x601) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_CURRENT_CONFIG));
+		IOLOG("\nMSR_PP0_CURRENT_CONFIG.........(0x601) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_CURRENT_CONFIG));
 	}
 
-	IOLOG("MSR_PP0_POWER_LIMIT............(0x638) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_POWER_LIMIT));
-	IOLOG("MSR_PP0_ENERGY_STATUS..........(0x639) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_ENERGY_STATUS));
+	msr = rdmsr64(MSR_PP0_POWER_LIMIT);
+
+	IOLOG("\nMSR_PP0_POWER_LIMIT............(0x638) : 0x%llX\n", msr);
+	IOLOG("----------------------------------------\n");
+	IOLOG(" - Power Limit........................ : %llu Watt\n", (bitfield32(msr, 14, 0) >> power_unit));
+	IOLOG(" - Enable Power Limit................. : %s\n", (msr & (1UL << 15)) ? "1 (enabled)": "0 (disabled)");
+	IOLOG(" - Clamping Limitation................ : %s\n", (msr & (1UL << 16)) ? "1 (allow going below OS-requested P/T state setting Time Window for Power Limit #2)": "0 (disabled)");
+	
+	Y = bitfield32(msr, 21, 17);
+	Z = bitfield32(msr, 23, 22);
+
+	IOLOG(" - Time Window for Power Limit........ : %llu (%u milli-Seconds)\n", bitfield32(msr, 23, 17), (unsigned int)(((1 << Y) * (1.0 + Z)) * time_unit));
+	IOLOG(" - Lock............................... : %s\n", bitfield32(msr, 31, 31) ? "1 (MSR locked until next reset)": "0 (MSR not locked)");
+
+	msr = rdmsr64(MSR_PP0_ENERGY_STATUS);
+
+	IOLOG("\nMSR_PP0_ENERGY_STATUS..........(0x639) : 0x%llX\n", msr);
+	IOLOG("----------------------------------------\n");
+	IOLOG(" - Total Energy Consumed.............. : %llu Joules (Watt = Joules / seconds)\n", (long long unsigned)(bitfield32(msr, 31, 0) * joulesPerEnergyUnit));
 
 	if (gCpuModel == CPU_MODEL_SB_CORE) // 0x2A - Intel 325462.pdf Vol.3C 35-120
 	{
-		IOLOG("MSR_PP0_POLICY.................(0x63a) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_POLICY));
+		msr = rdmsr64(MSR_PP0_POLICY);
+
+		IOLOG("\nMSR_PP0_POLICY.................(0x63a) : 0x%llX\n", msr);
+		IOLOG("----------------------------------------\n");
+		IOLOG(" - Priority Level..................... : %llu\n", bitfield32(msr, 4, 0));
 	}
 
-	IOLOG("MSR_TURBO_ACTIVATION_RATIO.....(0x64C) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_TURBO_ACTIVATION_RATIO));
+	IOLOG("\nMSR_TURBO_ACTIVATION_RATIO.....(0x64C) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_TURBO_ACTIVATION_RATIO));
 
 #if REPORT_IGPU_P_STATES
 	if (igpuEnabled)
@@ -417,14 +548,41 @@ void AppleIntelInfo::reportMSRs(void)
 			case CPU_MODEL_HASWELL:				// 0x3C - Intel 325462.pdf Vol.3C 35-140
 			case CPU_MODEL_HASWELL_ULT:			// 0x45 - Intel 325462.pdf Vol.3C 35-140
 			case CPU_MODEL_CRYSTALWELL:			// 0x46 - Intel 325462.pdf Vol.3C 35-140
+			case CPU_MODEL_SKYLAKE:				// 0x4E -
+			case CPU_MODEL_SKYLAKE_DT:			// 0x5E -
 
-				IOLOG("MSR_PP1_POWER_LIMIT............(0x640) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP1_POWER_LIMIT));
-				IOLOG("MSR_PP1_ENERGY_STATUS..........(0x641) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP1_ENERGY_STATUS));
-				IOLOG("MSR_PP1_POLICY.................(0x642) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP1_POLICY));
+				msr = rdmsr64(MSR_PP1_POWER_LIMIT);
+
+				IOLOG("\nMSR_PP1_POWER_LIMIT............(0x640) : 0x%llX\n", msr);
+				IOLOG("----------------------------------------\n");
+				IOLOG(" - Power Limit........................ : %llu Watt\n", (bitfield32(msr, 14, 0) >> power_unit));
+				IOLOG(" - Enable Power Limit................. : %s\n", (msr & (1UL << 15)) ? "1 (enabled)": "0 (disabled)");
+				IOLOG(" - Clamping Limitation................ : %s\n", (msr & (1UL << 16)) ? "1 (allow going below OS-requested P/T state setting Time Window for Power Limit #2)": "0 (disabled)");
+				
+				Y = bitfield32(msr, 21, 17);
+				Z = bitfield32(msr, 23, 22);
+				
+				IOLOG(" - Time Window for Power Limit........ : %llu (%u milli-Seconds)\n", bitfield32(msr, 23, 17), (unsigned int)(((1 << Y) * (1.0 + Z)) * time_unit));
+				IOLOG(" - Lock............................... : %s\n", bitfield32(msr, 31, 31) ? "1 (MSR locked until next reset)": "0 (MSR not locked)");
+
+				msr = rdmsr64(MSR_PP1_ENERGY_STATUS);
+
+				IOLOG("\nMSR_PP1_ENERGY_STATUS..........(0x641) : 0x%llX\n", msr);
+				IOLOG("----------------------------------------\n");
+				IOLOG(" - Total Energy Consumed.............. : %llu Joules (Watt = Joules / seconds)\n", (long long unsigned)(bitfield32(msr, 31, 0) * joulesPerEnergyUnit));
+
+				msr = rdmsr64(MSR_PP1_POLICY);
+
+				IOLOG("\nMSR_PP1_POLICY.................(0x642) : 0x%llX\n", msr);
+				IOLOG("----------------------------------------\n");
+				IOLOG(" - Priority Level..................... : %llu\n", bitfield32(msr, 4, 0));
+
 				break;
 		}
 	}
 #endif
+	
+	IOLOG("\n");
 
 	switch (gCpuModel)
 	{
@@ -434,6 +592,7 @@ void AppleIntelInfo::reportMSRs(void)
 		case CPU_MODEL_HASWELL:				// 0x3C - Intel 325462.pdf Vol.3C 35-133
 		case CPU_MODEL_HASWELL_ULT:			// 0x45 - Intel 325462.pdf Vol.3C 35-133
 		case CPU_MODEL_CRYSTALWELL:			// 0x46 - Intel 325462.pdf Vol.3C 35-133
+		case CPU_MODEL_HASWELL_SVR:
 
 			IOLOG("MSR_CONFIG_TDP_NOMINAL.........(0x648) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CONFIG_TDP_NOMINAL));
 			IOLOG("MSR_CONFIG_TDP_LEVEL1..........(0x649) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CONFIG_TDP_LEVEL1));
@@ -516,10 +675,11 @@ void AppleIntelInfo::reportMSRs(void)
 
 	reportHWP();
 
-	/* if ((cpuid_reg[eax] & 0x2000) == 0x2000)
+	if ((cpuid_reg[eax] & 0x2000) == 0x2000)
 	{
-		IOLOG("IA32_PKG_HDC_CTL...............(0xDB0) : 0x%llX\n", (unsigned long long)rdmsr64(0xDB0));
-	} */
+		IOLOG("HDC Supported\n");
+		// IOLOG("IA32_PKG_HDC_CTL...............(0xDB0) : 0x%llX\n", (unsigned long long)rdmsr64(0xDB0));
+	}
 }
 
 

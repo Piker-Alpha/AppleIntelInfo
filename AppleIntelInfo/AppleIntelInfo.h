@@ -25,6 +25,8 @@
 #include <sys/proc.h>
 #include <i386/cpuid.h>
 
+#include <libkern/sysctl.h>
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-register"
 #include <i386/proc_reg.h>
@@ -34,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"1.6"
+#define VERSION					"1.7"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -82,11 +84,11 @@
 	#define TEMP_BUFFER_SIZE	256
 	#define WRITE_BUFFER_SIZE	1024
 
-	int tempBufferLength = 0;
+//	int tempBufferLength = 0;
 
-	#define IOLOG(fmt, args...)								\
+	#define IOLOG(format, args...)							\
 	memset(logBuffer, 0, TEMP_BUFFER_SIZE);				\
-	snprintf(logBuffer, TEMP_BUFFER_SIZE, fmt, ##args);	\
+	snprintf(logBuffer, TEMP_BUFFER_SIZE, format, ##args);	\
 	writeReport();
 #else
 	#include <os/log.h>
@@ -194,6 +196,10 @@ private:
 	void getPCHDeviceID(void);
 	void reportIntelRegs(void);
 #endif
+
+	uint32_t getBusFrequency(void);
+
+	const char * getUnitText(uint8_t unit);
 
 	UInt16 Interval = 50;
 	
