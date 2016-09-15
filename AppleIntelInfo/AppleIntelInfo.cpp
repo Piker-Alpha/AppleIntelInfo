@@ -88,70 +88,70 @@ void AppleIntelInfo::reportHWP(void)
 				UInt64 aPerf = rdmsr64(IA32_APERF);
 				float busy = ((pPerf * 100) / aPerf);
 				UInt8 multiplier = (UInt8)(((gClockRatio + 0.5) * busy) / 100);
-				
-				IOLOG("MSR_PPERF......................(0x63E) : 0x%llX (%d)\n", msr, multiplier);
+
+				IOLOG("MSR_PPERF........................(0x63E) : 0x%llX (%d)\n", msr, multiplier);
 			}
-		
-			IOLOG("\nIA32_PM_ENABLE.................(0x770) : 0x%llX ", hwp_enabled);
+
+			IOLOG("\nIA32_PM_ENABLE...................(0x770) : 0x%llX ", hwp_enabled);
 			IOLOG("(HWP Enabled)\n");
 			
 			msr = rdmsr64(IA32_HWP_CAPABILITIES);
 
-			IOLOG("\nIA32_HWP_CAPABILITIES..........(0x771) : 0x%llX\n", msr);
-			IOLOG("----------------------------------------\n");
-			IOLOG(" - Highest Performance................ : %llu\n", bitfield32(msr, 7, 0));
-			IOLOG(" - Guaranteed Performance............. : %llu\n", bitfield32(msr, 15, 8));
-			IOLOG(" - Most Efficient Performance......... : %llu\n", bitfield32(msr, 23, 16));
-			IOLOG(" - Lowest Performance................. : %llu\n", bitfield32(msr, 31, 24));
-			
+			IOLOG("\nIA32_HWP_CAPABILITIES............(0x771) : 0x%llX\n", msr);
+			IOLOG("-----------------------------------------\n");
+			IOLOG(" - Highest Performance.................. : %llu\n", bitfield32(msr, 7, 0));
+			IOLOG(" - Guaranteed Performance............... : %llu\n", bitfield32(msr, 15, 8));
+			IOLOG(" - Most Efficient Performance........... : %llu\n", bitfield32(msr, 23, 16));
+			IOLOG(" - Lowest Performance................... : %llu\n", bitfield32(msr, 31, 24));
+
 			if ((cpuid_reg[eax] & 0x800) == 0x800)
 			{
 				msr = rdmsr64(IA32_HWP_REQUEST_PKG);
 				
-				IOLOG("\nIA32_HWP_REQUEST_PKG.......(0x772) : 0x%llX\n", msr);
-				IOLOG("----------------------------------------\n");
-				IOLOG(" - Minimum Performance................. : %llu\n", bitfield32(msr, 7, 0));
-				IOLOG(" - Maximum Performance................. : %llu\n", bitfield32(msr, 15, 8));
-				IOLOG(" - Desired Performance................. : %llu\n", bitfield32(msr, 23, 16));
-				IOLOG(" - Energy Efficient Performance........ : %llu\n", bitfield32(msr, 31, 24));
-				
+				IOLOG("\nIA32_HWP_REQUEST_PKG.............(0x772) : 0x%llX\n", msr);
+				IOLOG("-----------------------------------------\n");
+				IOLOG(" - Minimum Performance.................. : %llu\n", bitfield32(msr, 7, 0));
+				IOLOG(" - Maximum Performance.................. : %llu\n", bitfield32(msr, 15, 8));
+				IOLOG(" - Desired Performance.................. : %llu\n", bitfield32(msr, 23, 16));
+				IOLOG(" - Energy Efficient Performance......... : %llu\n", bitfield32(msr, 31, 24));
+
 				mantissa = bitfield32(msr, 38, 32);
 				exponent = bitfield32(msr, 41, 39);
-				
-				IOLOG("\t- Activity Window..................... : %d, %d\n", mantissa, exponent);
+
+				IOLOG(" - Activity Window...................... : %d, %d\n", mantissa, exponent);
 			}
 			
 			if ((cpuid_reg[eax] & 0x100) == 0x100)
 			{
 				msr = rdmsr64(IA32_HWP_INTERRUPT);
-				
-				IOLOG("\nIA32_HWP_INTERRUPT.............(0x773) : 0x%llX\n", msr);
-				IOLOG("----------------------------------------\n");
-				IOLOG(" - Guaranteed Performance Change...... : %s\n", (msr & 1) ? "1 (Interrupt generated on change of)": "0 (Interrupt generation disabled)");
-				IOLOG(" - Excursion Minimum.................. : %s\n", (msr & 2) ? "1 (Interrupt generated when unable to meet)": "0 (Interrupt generation disabled)");
+
+				IOLOG("\nIA32_HWP_INTERRUPT...............(0x773) : 0x%llX\n", msr);
+				IOLOG("------------------------------------------\n");
+				IOLOG(" - Guaranteed Performance Change........ : %s\n", (msr & 1) ? "1 (Interrupt generated on change of)": "0 (Interrupt generation disabled)");
+				IOLOG(" - Excursion Minimum.................... : %s\n", (msr & 2) ? "1 (Interrupt generated when unable to meet)": "0 (Interrupt generation disabled)");
 			}
 			
 			msr = rdmsr64(IA32_HWP_REQUEST);
 			
-			IOLOG("\nIA32_HWP_REQUEST...............(0x774) : 0x%llX\n", msr);
-			IOLOG("----------------------------------------\n");
-			IOLOG(" - Minimum Performance................ : %llu\n", bitfield32(msr, 7, 0));
-			IOLOG(" - Maximum Performance................ : %llu\n", bitfield32(msr, 15, 8));
-			IOLOG(" - Desired Performance................ : %llu\n", bitfield32(msr, 23, 16));
-			IOLOG(" - Energy Efficient Performance....... : %llu\n", bitfield32(msr, 31, 24));
+			IOLOG("\nIA32_HWP_REQUEST................(0x774) : 0x%llX\n", msr);
+			IOLOG("-----------------------------------------\n");
+			IOLOG(" - Minimum Performance................. : %llu\n", bitfield32(msr, 7, 0));
+			IOLOG(" - Maximum Performance................. : %llu\n", bitfield32(msr, 15, 8));
+			IOLOG(" - Desired Performance................. : %llu\n", bitfield32(msr, 23, 16));
+			IOLOG(" - Energy Efficient Performance........ : %llu\n", bitfield32(msr, 31, 24));
 			
 			mantissa = bitfield32(msr, 38, 32);
 			exponent = bitfield32(msr, 41, 39);
-			
-			IOLOG(" - Activity Window.................... : %d, %d\n", mantissa, exponent);
-			IOLOG(" - Package Control.................... : %s\n", (msr & 0x40000000000) ? "1 (control inputs to be derived from IA32_HWP_REQUEST_PKG)": "0");
+
+			IOLOG(" - Activity Window..................... : %d, %d\n", mantissa, exponent);
+			IOLOG(" - Package Control..................... : %s\n", (msr & 0x40000000000) ? "1 (control inputs to be derived from IA32_HWP_REQUEST_PKG)": "0");
 			
 			msr = rdmsr64(IA32_HWP_STATUS);
-			
-			IOLOG("\nIA32_HWP_STATUS................(0x777) : 0x%llX\n", msr);
-			IOLOG("----------------------------------------\n");
-			IOLOG(" - Guaranteed Performance Change...... : %s\n", (msr & 1) ? "1 (has occured)" : "0 (has not occured)");
-			IOLOG(" - Excursion To Minimum............... : %s\n", (msr & 4) ? "1 (has occured)" : "0 (has not occured)");
+
+			IOLOG("\nIA32_HWP_STATUS..................(0x777) : 0x%llX\n", msr);
+			IOLOG("-----------------------------------------\n");
+			IOLOG(" - Guaranteed Performance Change....... : %s\n", (msr & 1) ? "1 (has occured)" : "0 (has not occured)");
+			IOLOG(" - Excursion To Minimum................ : %s\n", (msr & 4) ? "1 (has occured)" : "0 (has not occured)");
 		}
 		else
 		{
@@ -196,6 +196,7 @@ void AppleIntelInfo::reportHDC(void)
 	
 	if (msr)
 	{
+
 		IOLOG("------------------------------------------\n");
 		IOLOG("Stall Cycle Counter...............(0xDB2) : %llu, %s\n", msr, msr ? "1 (forced-idle supported)" : "0 (forced-idle not supported)");
 	}
@@ -203,47 +204,49 @@ void AppleIntelInfo::reportHDC(void)
 	msr = rdmsr64(MSR_PKG_HDC_CONFIG);
 	index = bitfield32(msr, 2, 0);
 
-	IOLOG("\nMSR_PKG_HDC_CONFIG.............(0x652) : 0x%llX\n", msr);
+	IOLOG("\nMSR_PKG_HDC_CONFIG...............(0x652) : 0x%llX\n", msr);
 
 	if (msr)
 	{
 		const char * cxCountText[5] = { "no-counting", "count package C2 only", "count package C3 and deeper", "count package C6 and deeper", "count package C7 and deeper" };
 
 		IOLOG("------------------------------------------\n");
-		IOLOG("Pkg Cx Monitor ...................(0x652) : %d (%s)", index, cxCountText[index]);
+		IOLOG("Pkg Cx Monitor ..................(0x652) : %d (%s)", index, cxCountText[index]);
 	}
 	
 	msr = rdmsr64(MSR_CORE_HDC_RESIDENCY);
-	
-	IOLOG("\nMSR_CORE_HDC_RESIDENCY.........(0x653) : 0x%llX\n", msr);
+
+	IOLOG("\nMSR_CORE_HDC_RESIDENCY...........(0x653) : 0x%llX\n", msr);
 	
 	if (msr)
 	{
 		IOLOG("------------------------------------------\n");
-		IOLOG("Core Cx Duty Cycle Count... : %llu %s\n", msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
+		IOLOG("Core Cx Duty Cycle Count................ : %llu %s\n", msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
 		
 	}
 	
 	msr = rdmsr64(MSR_PKG_HDC_SHALLOW_RESIDENCY);
-	
-	IOLOG("\nMSR_PKG_HDC_SHALLOW_RESIDENCY..(0x655) : 0x%llX\n", msr);
+
+	IOLOG("\nMSR_PKG_HDC_SHALLOW_RESIDENCY....(0x655) : 0x%llX\n", msr);
 	
 	if (msr)
 	{
+
 		IOLOG("------------------------------------------\n");
-		IOLOG("Pkg C2 Duty Cycle Count..... : %llu %s\n", msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
+		IOLOG("Pkg C2 Duty Cycle Count................. : %llu %s\n", msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
 		
 	}
 	
 	msr = rdmsr64(MSR_PKG_HDC_DEEP_RESIDENCY);
-	
-	IOLOG("\nMSR_PKG_HDC_DEEP_RESIDENCY.....(0x656) : 0x%llX\n", msr);
+
+	IOLOG("\nMSR_PKG_HDC_DEEP_RESIDENCY.......(0x656) : 0x%llX\n", msr);
 	
 	if (msr)
 	{
 		const char * cxText[5] = { "x", "2", "3", "6", "7" };
+
 		IOLOG("------------------------------------------\n");
-		IOLOG("Pkg C%s Duty Cycle Count..... : %llu %s\n", cxText[index], msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
+		IOLOG("Pkg C%s Duty Cycle Count................ : %llu %s\n", cxText[index], msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
 		
 	}
 }
@@ -343,11 +346,13 @@ void AppleIntelInfo::reportMSRs(void)
 
 	msr = rdmsr64(MSR_CORE_THREAD_COUNT);
 
-	IOLOG("\nModel Specific Registers (MSRs)\n-----------------------------------------\n");
+	IOLOG("\nModel Specific Registers (MSRs)\n------------------------------------------\n");
 
 	IOLOG("\nMSR_CORE_THREAD_COUNT.............(0x35)  : 0x%llX\n", msr);
 	IOLOG("------------------------------------------\n");
+
 	number_of_cores = bitfield32(msr, 31, 16);
+
 	IOLOG(" - Core Count........................... : %d\n", number_of_cores);
 	IOLOG(" - Thread Count......................... : %llu\n", bitfield32(msr, 15, 0));
 
@@ -500,14 +505,14 @@ void AppleIntelInfo::reportMSRs(void)
 
 	IOLOG("\nMSR_TURBO_RATIO_LIMIT............(0x1AD) : 0x%llX\n", msr);
 	IOLOG("------------------------------------------\n");
-	
+
 	for (int i = 1; (i < 9) && (i <= number_of_cores); i++)
 	{
 		core_limit = bitfield32(msr, 7, 0);
 		
 		if (core_limit)
 		{
-			IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+			IOLOG(" - Maximum Ratio Limit for C%02d........ : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 
 			msr = (msr >> 8);
 		}
@@ -528,7 +533,7 @@ void AppleIntelInfo::reportMSRs(void)
 		
 			if (core_limit)
 			{
-				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+				IOLOG(" - Maximum Ratio Limit for C%02d........ : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 		
 				msr = (msr >> 8);
 			}
@@ -550,7 +555,7 @@ void AppleIntelInfo::reportMSRs(void)
 		
 			if (core_limit)
 			{
-				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+				IOLOG(" - Maximum Ratio Limit for C%02d........ : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 		
 				msr = (msr >> 8);
 			}
