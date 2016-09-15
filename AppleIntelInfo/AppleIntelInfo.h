@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"1.7b"
+#define VERSION					"1.7c"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -166,6 +166,7 @@ private:
 #if REPORT_MSRS
 	void reportMSRs(void);
 	void reportHWP(void);
+	void reportHDC(void);
 
 	bool logMSRs		= true;		// Set <key>logIGPU</key> to <false/> in Info.plist to disable this feature.
 #endif

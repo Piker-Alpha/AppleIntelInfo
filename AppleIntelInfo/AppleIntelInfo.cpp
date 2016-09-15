@@ -163,6 +163,93 @@ void AppleIntelInfo::reportHWP(void)
 
 //==============================================================================
 
+void AppleIntelInfo::reportHDC(void)
+{
+	uint8_t index = 0;
+	unsigned long long msr;
+
+	IOLOG("HDC Supported\n");
+
+	msr = rdmsr64(IA32_PKG_HDC_CTL);
+
+	IOLOG("\nIA32_PKG_HDC_CTL.................(0xDB0) : 0x%llX\n", msr);
+
+	if (msr)
+	{
+		IOLOG("------------------------------------------\n");
+		IOLOG("HDC PKG Enable...................(0x652) : %s\n", bitfield32(msr, 0, 0) ? "1 (HDC allowed)" : "0 (HDC not allowed)");
+	}
+
+	msr = rdmsr64(IA32_PM_CTL1);
+
+	IOLOG("\nIA32_PM_CTL1.....................(0xDB1) : 0x%llX\n", msr);
+	
+	if (msr)
+	{
+		IOLOG("------------------------------------------\n");
+		IOLOG("HDC Allow Block..................(0xDB1) : %s\n", bitfield32(msr, 0, 0) ? "1 (HDC blocked)" : "0 (HDC not blocked/allowed)");
+	}
+
+	msr = rdmsr64(IA32_THREAD_STALL);
+	
+	IOLOG("\nIA32_THREAD_STALL................(0xDB2) : 0x%llX\n", msr);
+	
+	if (msr)
+	{
+		IOLOG("------------------------------------------\n");
+		IOLOG("Stall Cycle Counter...............(0xDB2) : %llu, %s\n", msr, msr ? "1 (forced-idle supported)" : "0 (forced-idle not supported)");
+	}
+
+	msr = rdmsr64(MSR_PKG_HDC_CONFIG);
+	index = bitfield32(msr, 2, 0);
+
+	IOLOG("\nMSR_PKG_HDC_CONFIG.............(0x652) : 0x%llX\n", msr);
+
+	if (msr)
+	{
+		const char * cxCountText[5] = { "no-counting", "count package C2 only", "count package C3 and deeper", "count package C6 and deeper", "count package C7 and deeper" };
+
+		IOLOG("------------------------------------------\n");
+		IOLOG("Pkg Cx Monitor ...................(0x652) : %d (%s)", index, cxCountText[index]);
+	}
+	
+	msr = rdmsr64(MSR_CORE_HDC_RESIDENCY);
+	
+	IOLOG("\nMSR_CORE_HDC_RESIDENCY.........(0x653) : 0x%llX\n", msr);
+	
+	if (msr)
+	{
+		IOLOG("------------------------------------------\n");
+		IOLOG("Core Cx Duty Cycle Count... : %llu %s\n", msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
+		
+	}
+	
+	msr = rdmsr64(MSR_PKG_HDC_SHALLOW_RESIDENCY);
+	
+	IOLOG("\nMSR_PKG_HDC_SHALLOW_RESIDENCY..(0x655) : 0x%llX\n", msr);
+	
+	if (msr)
+	{
+		IOLOG("------------------------------------------\n");
+		IOLOG("Pkg C2 Duty Cycle Count..... : %llu %s\n", msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
+		
+	}
+	
+	msr = rdmsr64(MSR_PKG_HDC_DEEP_RESIDENCY);
+	
+	IOLOG("\nMSR_PKG_HDC_DEEP_RESIDENCY.....(0x656) : 0x%llX\n", msr);
+	
+	if (msr)
+	{
+		const char * cxText[5] = { "x", "2", "3", "6", "7" };
+		IOLOG("------------------------------------------\n");
+		IOLOG("Pkg C%s Duty Cycle Count..... : %llu %s\n", cxText[index], msr, msr ? "(forced-idle cycle count)": "(not supported/no forced-idle serviced)");
+		
+	}
+}
+
+//==============================================================================
+
 uint32_t AppleIntelInfo::getBusFrequency(void)
 {
 	size_t size = 4;
@@ -313,7 +400,10 @@ void AppleIntelInfo::reportMSRs(void)
 	}
 
 	IOLOG("\nIA32_MPERF.......................(0xE7)  : 0x%llX\n", (unsigned long long)rdmsr64(IA32_MPERF));
-	IOLOG("IA32_APERF.......................(0xE8)  : 0x%llX\n", (unsigned long long)rdmsr64(IA32_APERF));
+	
+	UInt64 aPerf = rdmsr64(IA32_APERF);
+
+	IOLOG("IA32_APERF.......................(0xE8)  : 0x%llX\n", aPerf);
 
 	if (gCpuModel == CPU_MODEL_BROADWELL_E)
 	{
@@ -681,6 +771,18 @@ void AppleIntelInfo::reportMSRs(void)
 		{
 			IOLOG("------------------------------------------\n");
 		}
+		
+		msr = rdmsr64(MSR_PPERF);
+
+		IOLOG("\nMSR_PPERF........................(0x64E) : 0x%llX\n", msr);
+		
+		if (msr)
+		{
+			IOLOG("------------------------------------------\n");
+			
+			// busy = ((aPerf * 100) / msr);
+			IOLOG(" - Hardware workload scalability........ : %llu\n", bitfield32(msr, 63, 0));
+		}
 
 		msr = rdmsr64(MSR_CORE_PERF_LIMIT_REASONS);
 
@@ -718,17 +820,16 @@ void AppleIntelInfo::reportMSRs(void)
 			IOLOG(" - Turbo Transition Attenuation Log..... : %s\n", bitfield32(msr, 29, 29) ? "1 (status bit has asserted)" : "0");
 			// bit 63-30 Reserved.
 		}
+		
+		if ((cpuid_reg[eax] & 0x2000) == 0x2000) // bit-13 HDC base registers IA32_PKG_HDC_CTL, IA32_PM_CTL1, IA32_THREAD_STALL MSRs are supported if set.
+		{
+			reportHDC();
+		}
 	}
 
 	IOLOG("\nIA32_TSC_DEADLINE................(0x6E0) : 0x%llX\n", (unsigned long long)rdmsr64(0x6E0));
 
 	reportHWP();
-
-	if ((cpuid_reg[eax] & 0x2000) == 0x2000)
-	{
-		IOLOG("HDC Supported\n");
-		// IOLOG("\nIA32_PKG_HDC_CTL................(0xDB0) : 0x%llX\n", (unsigned long long)rdmsr64(0xDB0));
-	}
 }
 
 
