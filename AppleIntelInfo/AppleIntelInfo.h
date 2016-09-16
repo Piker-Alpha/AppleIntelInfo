@@ -87,7 +87,7 @@
 //	int tempBufferLength = 0;
 
 	#define IOLOG(format, args...)							\
-	memset(logBuffer, 0, TEMP_BUFFER_SIZE);				\
+	memset(logBuffer, 0, TEMP_BUFFER_SIZE);					\
 	snprintf(logBuffer, TEMP_BUFFER_SIZE, format, ##args);	\
 	writeReport();
 #else
