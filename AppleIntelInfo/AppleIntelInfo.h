@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"1.7e"
+#define VERSION					"1.8"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -202,8 +202,9 @@ private:
 
 	const char * getUnitText(uint8_t unit);
 
-	UInt16 Interval = 50;
-	
+	UInt16 Interval					= 50;
+	uint16_t gBclk					= 0;
+
 	UInt64	gCoreMultipliers		= 0ULL;
 	UInt64	gTriggeredPStates		= 0ULL;
 	

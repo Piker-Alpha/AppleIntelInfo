@@ -85,6 +85,8 @@
 #define MSR_DRAM_PERF_STATUS			0x61B
 #define MSR_DRAM_POWER_INFO				0x61C
 
+#define MSR_UNCORE_RATIO_LIMIT			0x620
+
 // Xeon (0x4F) Package residency MSR's.
 // Haswell-ULT (0x45) Package residency MSR's.
 #define MSR_PKG_C8_RESIDENCY			0x630

@@ -342,8 +342,6 @@ void AppleIntelInfo::reportMSRs(void)
 	
 	do_cpuid(0x00000006, cpuid_reg);
 
-	uint16_t bclk = (getBusFrequency() / 1000000);
-
 	msr = rdmsr64(MSR_CORE_THREAD_COUNT);
 
 	IOLOG("\nModel Specific Registers (MSRs)\n------------------------------------------\n");
@@ -361,7 +359,7 @@ void AppleIntelInfo::reportMSRs(void)
 
 	IOLOG("\nMSR_PLATFORM_INFO................(0xCE)  : 0x%llX\n", msr);
 	IOLOG("------------------------------------------\n");
-	IOLOG(" - Maximum Non-Turbo Ratio.............. : 0x%X (%u MHz)\n", performanceState, (performanceState * bclk));
+	IOLOG(" - Maximum Non-Turbo Ratio.............. : 0x%X (%u MHz)\n", performanceState, (performanceState * gBclk));
 	IOLOG(" - Ratio Limit for Turbo Mode........... : %s\n", (msr & (1 << 28)) ? "1 (programmable)" : "0 (not programmable)");
 	IOLOG(" - TDP Limit for Turbo Mode............. : %s\n", (msr & (1 << 29)) ? "1 (programmable)" : "0 (not programmable)");
 	IOLOG(" - Low Power Mode Support............... : %s\n", (msr & (1UL << 32)) ? "1 (LPM supported)": "0 (LMP not supported)");
@@ -455,7 +453,7 @@ void AppleIntelInfo::reportMSRs(void)
 	if (msr)
 	{
 		IOLOG("------------------------------------------\n");
-		IOLOG(" - Current Performance State Value...... : 0x%X (%u MHz)\n", performanceState, ((performanceState >> 8) * bclk));
+		IOLOG(" - Current Performance State Value...... : 0x%X (%u MHz)\n", performanceState, ((performanceState >> 8) * gBclk));
 	}
 
 	msr = rdmsr64(MSR_IA32_PERF_CONTROL);
@@ -466,7 +464,7 @@ void AppleIntelInfo::reportMSRs(void)
 	if (msr)
 	{
 		IOLOG("------------------------------------------\n");
-		IOLOG(" - Target performance State Value....... : 0x%X (%u MHz)\n", performanceState, ((performanceState >> 8) * bclk));
+		IOLOG(" - Target performance State Value....... : 0x%X (%u MHz)\n", performanceState, ((performanceState >> 8) * gBclk));
 	}
 
 	if (cpuid_reg[eax] & (1 << 0))
@@ -485,11 +483,30 @@ void AppleIntelInfo::reportMSRs(void)
 	{
 		IOLOG("------------------------------------------\n");
 		IOLOG(" - Fast-Strings......................... : %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
-
 		IOLOG(" - Automatic Thermal Control Circuit.... : %s\n", (msr & (1 <<  3)) ? "1 (enabled)" : "0 (disabled)");
-
 		IOLOG(" - Performance Monitoring............... : %s\n", (msr & (1 <<  7)) ? "1 (available)" : "not available");
 		IOLOG(" - Enhanced Intel SpeedStep Technology.. : %s\n", (msr & (1 << 16)) ? "1 (enabled)" : "0 (disabled)");
+	}
+
+	msr = rdmsr64(MSR_TEMPERATURE_TARGET);
+	uint8_t time_unit = bitfield32(msr, 6, 0);
+
+	IOLOG("\nMSR_TEMPERATURE_TARGET...........(0x1A2) : 0x%llX\n", msr);
+	
+	if (msr)
+	{
+		char timeString[25];
+		memset(timeString, 0, 25);
+		IOLOG("------------------------------------------\n");
+
+		if (time_unit)
+		{
+			snprintf(timeString, 25, "(%sSeconds)", getUnitText(time_unit));
+		}
+
+		IOLOG(" - Turbo Attenuation Units.............. : %u %s\n", time_unit, timeString);
+		IOLOG(" - Temperature Target................... : %llu\n", bitfield32(msr, 23, 16));
+		IOLOG(" - TCC Activation Offset................ : %llu\n", bitfield32(msr, 29, 24));
 	}
 
 	msr = rdmsr64(MSR_MISC_PWR_MGMT);
@@ -513,7 +530,7 @@ void AppleIntelInfo::reportMSRs(void)
 		
 		if (core_limit)
 		{
-			IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+			IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 
 			msr = (msr >> 8);
 		}
@@ -534,7 +551,7 @@ void AppleIntelInfo::reportMSRs(void)
 		
 			if (core_limit)
 			{
-				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 		
 				msr = (msr >> 8);
 			}
@@ -556,7 +573,7 @@ void AppleIntelInfo::reportMSRs(void)
 		
 			if (core_limit)
 			{
-				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * bclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
 		
 				msr = (msr >> 8);
 			}
@@ -602,7 +619,7 @@ void AppleIntelInfo::reportMSRs(void)
 
 	uint8_t power_unit = bitfield32(msr, 3, 0);
 	uint8_t energy_status_unit = bitfield32(msr, 12, 8);
-	uint8_t time_unit = bitfield32(msr, 19, 16);
+	time_unit = bitfield32(msr, 19, 16);
 
 	float joulesPerEnergyUnit = 1. / float(1ULL << energy_status_unit);
 
@@ -615,7 +632,7 @@ void AppleIntelInfo::reportMSRs(void)
 	{
 		IOLOG("------------------------------------------\n");
 		IOLOG(" - Power Units.......................... : %u (1/%d Watt)\n", power_unit, (1 << power_unit));
-		IOLOG(" - Energy Status Units.................. : %u (%sJoules)\n", energy_status_unit, getUnitText( energy_status_unit));
+		IOLOG(" - Energy Status Units.................. : %u (%sJoules)\n", energy_status_unit, getUnitText(energy_status_unit));
 		IOLOG(" - Time Units .......................... : %u (%sSeconds)\n", time_unit, getUnitText(time_unit));
 	}
 
@@ -1289,6 +1306,8 @@ bool AppleIntelInfo::start(IOService *provider)
 			
 			gCpuModel = bitfield32(cpuid_reg[eax], 7,  4) + (bitfield32(cpuid_reg[eax], 19, 16) << 4);
 
+			gBclk = (getBusFrequency() / 1000000);
+
 #if REPORT_C_STATES
 			switch (gCpuModel) // TODO: Verify me!
 			{
@@ -1345,20 +1364,86 @@ bool AppleIntelInfo::start(IOService *provider)
 			}
 #endif
 
-			IOLOG("\nCPU Ratio Info:\n------------------------------------------\nCPU Maximum Efficiency Ratio.............: %2d00 MHz\n", gMinRatio);
-			IOLOG("CPU Maximum non-Turbo Frequency..........: %d00 MHz\n", gClockRatio);
+			IOLOG("\nCPU Ratio Info:\n------------------------------------------\nBase Clock Frequency (BLCK)............. : %d MHz\n", gBclk);
+			IOLOG("Maximum Efficiency Ratio/Frequency.......: %2d (%4d MHz)\n", gMinRatio, (gMinRatio * gBclk));
+			IOLOG("Maximum non-Turbo Ratio/Frequency........: %2d (%4d MHz)\n", gClockRatio, (gClockRatio * gBclk));
 			
 			if (!((rdmsr64(IA32_MISC_ENABLES) >> 32) & 0x40))	// Turbo Mode Enabled?
 			{
 				msr = rdmsr64(MSR_TURBO_RATIO_LIMIT);
 				gMaxRatio = (UInt8)(msr & 0xff);
-				IOLOG("CPU Maximum Turbo Frequency..............: %d00 MHz\n", gMaxRatio);
+				IOLOG("Maximum Turbo Ratio/Frequency............: %2d (%4d MHz)\n", gMaxRatio, (gMaxRatio * gBclk));
 			}
 			else
 			{
 				gMaxRatio = gClockRatio;
-				IOLOG("CPU Maximum Frequency....................: %d00 MHz\n", gMaxRatio);
+				IOLOG("Maximum Ratio/Frequency..................: %2d (%4d MHz)\n", gMaxRatio, (gMaxRatio * gBclk));
 			}
+
+#if REPORT_IGPU_P_STATES
+			if (igpuEnabled)
+			{
+				IOPhysicalAddress address = (IOPhysicalAddress)(0xFED10000 + 0x5948);
+				memDescriptor = IOMemoryDescriptor::withPhysicalAddress(address, 0x53, kIODirectionInOut);
+
+				if (memDescriptor != NULL)
+				{
+					if ((result = memDescriptor->prepare()) == kIOReturnSuccess)
+					{
+						memoryMap = memDescriptor->map();
+
+						if (memoryMap != NULL)
+						{
+							gMchbar = (UInt8 *)memoryMap->getVirtualAddress();
+
+							// Preventing a stupid (UEFI) BIOS limit.
+							if (gMchbar[0x4C] < gMchbar[0x50])
+							{
+								gMchbar[0x4C] = gMchbar[0x50];
+							}
+
+							//
+							// Examples IGPU multiplier:	17 (multiplier) * 50 (frequency in MHz) =  850 MHz
+							//								22 (multiplier) * 50 (frequency in MHz) = 1100 MHz
+							//								6 P-States: 850, 900, 950, 1000, 1050 and 1100 MHz
+							//
+							// Current RP-State, when the graphics engine is in RC6, this reflects the last used ratio.
+							IOLOG("\nIGPU Info:\n------------------------------------------\n");
+							IOLOG("IGPU Current Frequency...................: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x01])); // RP_STATE_RATIO (CURRENT_FREQUENCY)
+							// Maximum RPN base frequency capability for the Integrated GFX Engine (GT).
+							IOLOG("IGPU Minimum Frequency...................: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x52])); // RPN_CAP (MIN_FREQUENCY)
+							// Maximum RP1 base frequency capability for the Integrated GFX Engine (GT).
+							IOLOG("IGPU Maximum Non-Turbo Frequency.........: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x51])); // RP1_CAP (MAX_NON_TURBO)
+							// Maximum RP0 base frequency capability for the Integrated GFX Engine (GT).
+							IOLOG("IGPU Maximum Turbo Frequency.............: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x50])); // RP0_CAP (MAX_TURBO))
+
+							// Maximum base frequency limit for the Integrated GFX Engine (GT) allowed during run-time.
+							if (gMchbar[0x4C] == 255)
+							{
+								IOLOG("IGPU Maximum limit.......................: No Limit\n\n"); // RPSTT_LIM
+							}
+							else
+							{
+								IOLOG("IGPU Maximum limit......................: %4d MHz\n\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x4C])); // RPSTT_LIM
+							}
+						}
+						else
+						{
+							IOLOG("Error: memoryMap == NULL\n");
+						}
+					}
+					else
+					{
+						IOLOG("Error: memDescriptor->prepare() failed!\n");
+					}
+				}
+				else
+				{
+					IOLOG("Error: memDescriptor == NULL\n");
+				}
+			}
+#endif
+			IOLOG("P-State ratio * %d = Frequency in MHz\n------------------------------------------\n", gBclk);
 
 			timerEventSource = IOTimerEventSource::timerEventSource(this, OSMemberFunctionCast(IOTimerEventSource::Action, this, &AppleIntelInfo::loopTimerEvent));
 			workLoop = getWorkLoop();
@@ -1366,70 +1451,6 @@ bool AppleIntelInfo::start(IOService *provider)
 			if (timerEventSource && workLoop && (kIOReturnSuccess == workLoop->addEventSource(timerEventSource)))
 			{
 				this->registerService(0);
-
-#if REPORT_IGPU_P_STATES
-				if (igpuEnabled)
-				{
-					IOPhysicalAddress address = (IOPhysicalAddress)(0xFED10000 + 0x5948);
-					memDescriptor = IOMemoryDescriptor::withPhysicalAddress(address, 0x53, kIODirectionInOut);
-
-					if (memDescriptor != NULL)
-					{
-						if ((result = memDescriptor->prepare()) == kIOReturnSuccess)
-						{
-							memoryMap = memDescriptor->map();
-
-							if (memoryMap != NULL)
-							{
-								gMchbar = (UInt8 *)memoryMap->getVirtualAddress();
-
-								// Preventing a stupid (UEFI) BIOS limit.
-								if (gMchbar[0x4C] < gMchbar[0x50])
-								{
-									gMchbar[0x4C] = gMchbar[0x50];
-								}
-
-								//
-								// Examples IGPU multiplier:	17 (multiplier) * 50 (frequency in MHz) =  850 MHz
-								//								22 (multiplier) * 50 (frequency in MHz) = 1100 MHz
-								//								6 P-States: 850, 900, 950, 1000, 1050 and 1100 MHz
-								//
-								// Current RP-State, when the graphics engine is in RC6, this reflects the last used ratio.
-								IOLOG("\nIGPU Info:\n------------------------------------------\n");
-								IOLOG("IGPU Current Frequency...................: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x01])); // RP_STATE_RATIO (CURRENT_FREQUENCY)
-								// Maximum RPN base frequency capability for the Integrated GFX Engine (GT).
-								IOLOG("IGPU Minimum Frequency...................: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x52])); // RPN_CAP (MIN_FREQUENCY)
-								// Maximum RP1 base frequency capability for the Integrated GFX Engine (GT).
-								IOLOG("IGPU Maximum Non-Turbo Frequency.........: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x51])); // RP1_CAP (MAX_NON_TURBO)
-								// Maximum RP0 base frequency capability for the Integrated GFX Engine (GT).
-								IOLOG("IGPU Maximum Turbo Frequency.............: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x50])); // RP0_CAP (MAX_TURBO))
-
-								// Maximum base frequency limit for the Integrated GFX Engine (GT) allowed during run-time.
-								if (gMchbar[0x4C] == 255)
-								{
-									IOLOG("IGPU Maximum limit.......................: No Limit\n\n"); // RPSTT_LIM
-								}
-								else
-								{
-									IOLOG("IGPU Maximum limit......................: %4d MHz\n\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x4C])); // RPSTT_LIM
-								}
-							}
-							else
-							{
-								IOLOG("Error: memoryMap == NULL\n");
-							}
-						}
-						else
-						{
-							IOLOG("Error: memDescriptor->prepare() failed!\n");
-						}
-					}
-					else
-					{
-						IOLOG("Error: memDescriptor == NULL\n");
-					}
-				}
-#endif
 				timerEventSource->setTimeoutMS(1000);
 
 				return true;
