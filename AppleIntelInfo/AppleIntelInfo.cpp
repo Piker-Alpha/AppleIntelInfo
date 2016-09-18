@@ -580,28 +580,31 @@ void AppleIntelInfo::reportMSRs(void)
 		}
 	}
 	
-	msr = rdmsr64(IA32_ENERGY_PERF_BIAS);
-
-	IOLOG("\nIA32_ENERGY_PERF_BIAS............(0x1B0) : 0x%llX\n", msr);
-	
-	if (msr)
+	if (bitfield32(cpuid_reg[ecx], 3, 3) == 1)
 	{
-		IOLOG("------------------------------------------\n");
-	
-		switch(bitfield32(msr, 3, 0))
+		msr = rdmsr64(IA32_ENERGY_PERF_BIAS);
+
+		IOLOG("\nIA32_ENERGY_PERF_BIAS............(0x1B0) : 0x%llX\n", msr);
+		
+		if (msr)
 		{
-			case 0:
-			case 1:
-				IOLOG(" - Power Policy Preference...............: %llu (%s)\n", bitfield32(msr, 3, 0), "highest performance");
-				break;
+			IOLOG("------------------------------------------\n");
+		
+			switch(bitfield32(msr, 3, 0))
+			{
+				case 0:
+				case 1:
+					IOLOG(" - Power Policy Preference...............: %llu (%s)\n", bitfield32(msr, 3, 0), "highest performance");
+					break;
 
-			case 5:
-				IOLOG(" - Power Policy Preference...............: %llu (%s)\n", bitfield32(msr, 3, 0), "balanced performance and energy saving");
-				break;
+				case 5:
+					IOLOG(" - Power Policy Preference...............: %llu (%s)\n", bitfield32(msr, 3, 0), "balanced performance and energy saving");
+					break;
 
-			case 15:
-				IOLOG(" - Power Policy Preference...............: %llu (%s)\n", bitfield32(msr, 3, 0), "maximize energy saving");
-				break;
+				case 15:
+					IOLOG(" - Power Policy Preference...............: %llu (%s)\n", bitfield32(msr, 3, 0), "maximize energy saving");
+					break;
+			}
 		}
 	}
 
@@ -1424,7 +1427,7 @@ bool AppleIntelInfo::start(IOService *provider)
 							}
 							else
 							{
-								IOLOG("IGPU Maximum limit......................: %4d MHz\n\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x4C])); // RPSTT_LIM
+								IOLOG("IGPU Maximum limit.......................: %4d MHz\n\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x4C])); // RPSTT_LIM
 							}
 						}
 						else
