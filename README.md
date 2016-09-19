@@ -1,9 +1,9 @@
 AppleIntelInfo.kext
 ===================
 
-What do I need?
+What do I need to do?
 
-You need to compile AppleIntelInfo yourself with help of Xcode (tested with the 7.0 Beta).
+You first need to download and then compile AppleIntelInfo with Xcode.
 
 How do I load AppleIntelInfo.kext?
 
@@ -14,6 +14,7 @@ or with
 
 sudo kextutil AppleIntelInfo.kext 
 ```
+Warning: Do not copy the kext to: /System/Library/Extensions or /Library/Extensions and do not inject it with help of the boot loader!
 
 How do I unload AppleIntelInfo.kext?
 
