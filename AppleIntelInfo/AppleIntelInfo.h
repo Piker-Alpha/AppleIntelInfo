@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"1.8b"
+#define VERSION					"1.8c"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -240,9 +240,9 @@ UInt8	gCoreStates	= 0ULL;
 	bool	gCheckC6	= true;
 	bool	gCheckC7	= false;
 
-	UInt32	gC3Cores	= 0;
-	UInt32	gC6Cores	= 0;
-	UInt32	gC7Cores	= 0;
+	UInt64	gC3Cores	= 0;
+	UInt64	gC6Cores	= 0;
+	UInt64	gC7Cores	= 0;
 
 	UInt32	gTriggeredC3Cores	= 0;
 	UInt32	gTriggeredC6Cores	= 0;
