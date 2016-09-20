@@ -244,9 +244,9 @@ UInt8	gCoreStates	= 0ULL;
 	UInt64	gC6Cores	= 0;
 	UInt64	gC7Cores	= 0;
 
-	UInt32	gTriggeredC3Cores	= 0;
-	UInt32	gTriggeredC6Cores	= 0;
-	UInt32	gTriggeredC7Cores	= 0;
+	UInt64	gTriggeredC3Cores	= 0;
+	UInt64	gTriggeredC6Cores	= 0;
+	UInt64	gTriggeredC7Cores	= 0;
 #endif
 
 UInt64	gCoreMultipliers = 0ULL;
