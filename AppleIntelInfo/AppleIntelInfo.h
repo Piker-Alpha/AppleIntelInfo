@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"1.8"
+#define VERSION					"1.8a"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -83,8 +83,6 @@
 
 	#define TEMP_BUFFER_SIZE	256
 	#define WRITE_BUFFER_SIZE	1024
-
-//	int tempBufferLength = 0;
 
 	#define IOLOG(format, args...)							\
 	memset(logBuffer, 0, TEMP_BUFFER_SIZE);					\
