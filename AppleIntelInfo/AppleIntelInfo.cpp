@@ -339,7 +339,6 @@ void AppleIntelInfo::reportMSRs(void)
 	IOLOG(" - Stepping............................. : %lu\n", bitfield32(cpuid_reg[eax],  3,  0));
 	IOLOG(" - Model................................ : 0x%X (%d)\n", model, model);
 
-	
 	do_cpuid(0x00000006, cpuid_reg);
 
 	msr = rdmsr64(MSR_CORE_THREAD_COUNT);
@@ -1149,7 +1148,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 		gTriggeredC3Cores = gC3Cores;
 		IOLOG("CPU C3-Cores [ ");
 
-		for (currentBit = 0; currentBit <= 16; currentBit++)
+		for (currentBit = 0; currentBit <= 32; currentBit++)
 		{
 			value = (1ULL << currentBit);
 
@@ -1167,7 +1166,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 		gTriggeredC6Cores = gC6Cores;
 		IOLOG("CPU C6-Cores [ ");
 
-		for (currentBit = 0; currentBit <= 16; currentBit++)
+		for (currentBit = 0; currentBit <= 32; currentBit++)
 		{
 			value = (1ULL << currentBit);
 
@@ -1185,7 +1184,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 		gTriggeredC7Cores = gC7Cores;
 		IOLOG("CPU C7-Cores [ ");
 
-		for (currentBit = 0; currentBit <= 16; currentBit++)
+		for (currentBit = 0; currentBit <= 32; currentBit++)
 		{
 			value = (1ULL << currentBit);
 
