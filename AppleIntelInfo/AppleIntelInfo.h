@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"1.8a"
+#define VERSION					"1.8b"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -223,10 +223,12 @@ public:
 	virtual void stop(IOService * provider) override;
 	virtual void free(void) override;
 	
-	UInt8	gMinRatio	= 0;
-	UInt8	gClockRatio	= 0;
-	UInt8	gMaxRatio	= 0;
-	UInt8	gCpuModel	= 0;
+	UInt8	gMinRatio		= 0;
+	UInt8	gClockRatio		= 0;
+	UInt8	gMaxRatio		= 0;
+	UInt8	gCpuModel		= 0;
+	UInt8	gCoreCount		= 0;
+	UInt8	gThreadCount	= 0;
 };
 
 OSDefineMetaClassAndStructors(AppleIntelInfo, IOService)

@@ -341,17 +341,12 @@ void AppleIntelInfo::reportMSRs(void)
 
 	do_cpuid(0x00000006, cpuid_reg);
 
-	msr = rdmsr64(MSR_CORE_THREAD_COUNT);
-
 	IOLOG("\nModel Specific Registers (MSRs)\n------------------------------------------\n");
 
 	IOLOG("\nMSR_CORE_THREAD_COUNT............(0x35)  : 0x%llX\n", msr);
 	IOLOG("------------------------------------------\n");
-
-	number_of_cores = bitfield32(msr, 31, 16);
-
-	IOLOG(" - Core Count........................... : %d\n", number_of_cores);
-	IOLOG(" - Thread Count......................... : %llu\n", bitfield32(msr, 15, 0));
+	IOLOG(" - Core Count........................... : %d\n", gCoreCount);
+	IOLOG(" - Thread Count......................... : %d\n", gThreadCount);
 
 	msr = rdmsr64(MSR_PLATFORM_INFO);
 	performanceState = bitfield32(msr, 15, 8);
@@ -1148,7 +1143,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 		gTriggeredC3Cores = gC3Cores;
 		IOLOG("CPU C3-Cores [ ");
 
-		for (currentBit = 0; currentBit <= 32; currentBit++)
+		for (currentBit = 0; currentBit < gThreadCount; currentBit++)
 		{
 			value = (1ULL << currentBit);
 
@@ -1166,7 +1161,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 		gTriggeredC6Cores = gC6Cores;
 		IOLOG("CPU C6-Cores [ ");
 
-		for (currentBit = 0; currentBit <= 32; currentBit++)
+		for (currentBit = 0; currentBit < gThreadCount; currentBit++)
 		{
 			value = (1ULL << currentBit);
 
@@ -1184,7 +1179,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 		gTriggeredC7Cores = gC7Cores;
 		IOLOG("CPU C7-Cores [ ");
 
-		for (currentBit = 0; currentBit <= 32; currentBit++)
+		for (currentBit = 0; currentBit < gThreadCount; currentBit++)
 		{
 			value = (1ULL << currentBit);
 
@@ -1334,6 +1329,9 @@ bool AppleIntelInfo::start(IOService *provider)
 			msr = rdmsr64(MSR_PLATFORM_INFO);
 			gMinRatio = (UInt8)((msr >> 40) & 0xff);
 			gClockRatio = (UInt8)((msr >> 8) & 0xff);
+			msr = rdmsr64(MSR_CORE_THREAD_COUNT);
+			gCoreCount = bitfield32(msr, 31, 16);
+			gThreadCount = bitfield32(msr, 15, 0);
 
 #if REPORT_MSRS
 			gTSC = rdtsc64();
