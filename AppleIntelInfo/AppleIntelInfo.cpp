@@ -312,7 +312,6 @@ const char * AppleIntelInfo::getUnitText(uint8_t unit)
 void AppleIntelInfo::reportMSRs(void)
 {
 	uint8_t core_limit;
-	uint8_t number_of_cores;
 	uint32_t performanceState;
 	uint32_t cpuid_reg[4];
 	uint64_t msr;
@@ -479,7 +478,10 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG(" - Fast-Strings......................... : %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
 		IOLOG(" - Automatic Thermal Control Circuit.... : %s\n", (msr & (1 <<  3)) ? "1 (enabled)" : "0 (disabled)");
 		IOLOG(" - Performance Monitoring............... : %s\n", (msr & (1 <<  7)) ? "1 (available)" : "not available");
+		IOLOG(" - Processor Event Based Sampling....... : %s\n", (msr & (1 << 12)) ? "1 (PEBS not supported)" : "0 (PEBS supported)");
 		IOLOG(" - Enhanced Intel SpeedStep Technology.. : %s\n", (msr & (1 << 16)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - MONITOR FSM.......................... : %s\n", (msr & (1 << 18)) ? "1 (MONITOR/MWAIT supported)" : "0 (MONITOR/MWAIT not supported)");
+		IOLOG(" - CFG Lock............................. : %s\n", (msr & (1 << 20)) ? "1 (MSR locked until next reset)" : "0 (MSR not locked)");
 	}
 
 	msr = rdmsr64(MSR_TEMPERATURE_TARGET);
@@ -510,7 +512,12 @@ void AppleIntelInfo::reportMSRs(void)
 	if (msr)
 	{
 		IOLOG("------------------------------------------\n");
-		IOLOG(" - EIST Hardware Coordination........... : %s\n", (msr & 1) ? "1 (disabled)" : "0 (enabled)");
+		IOLOG(" - EIST Hardware Coordination........... : %s\n", (msr & (1 <<  0)) ? "1 (hardware coordination disabled)" : "0 (hardware coordination enabled)");
+
+		IOLOG(" - Energy/Performance Bias support...... : %lu\n", bitfield32(cpuid_reg[ecx],  3,  3) );
+		IOLOG(" - Energy/Performance Bias.............. : %s\n", (msr & (1 <<  1)) ? "1 (enabled/MSR visible to software)" : "0 (disabled/MSR not visible to software)");
+
+		IOLOG(" - Thermal Interrupt Coordination Enable : %s\n", (msr & (1 << 22)) ? "1 (thermal interrupt routed to all cores)" : "0 (thermal interrupt not rerouted)");
 	}
 
 	msr = rdmsr64(MSR_TURBO_RATIO_LIMIT);
@@ -518,13 +525,13 @@ void AppleIntelInfo::reportMSRs(void)
 	IOLOG("\nMSR_TURBO_RATIO_LIMIT............(0x1AD) : 0x%llX\n", msr);
 	IOLOG("------------------------------------------\n");
 
-	for (int i = 1; (i < 9) && (i <= number_of_cores); i++)
+	for (int i = 1; (i < 9) && (i <= gCoreCount); i++)
 	{
 		core_limit = bitfield32(msr, 7, 0);
 		
 		if (core_limit)
 		{
-			IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+			IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > gCoreCount) && core_limit) ? "(garbage / unused)" : "");
 
 			msr = (msr >> 8);
 		}
@@ -532,20 +539,20 @@ void AppleIntelInfo::reportMSRs(void)
 	//
 	// Intel® Xeon® Processor E5 v3 Family
 	//
-	if (number_of_cores > 8)
+	if (gCoreCount > 8)
 	{
 		msr = rdmsr64(MSR_TURBO_RATIO_LIMIT1);
 	
 		IOLOG("\nMSR_TURBO_RATIO_LIMIT1...........(0x1AE) : 0x%llX\n", msr);
 		IOLOG("------------------------------------------\n");
 	
-		for (int i = 9; (i < 17) && (i <= number_of_cores); i++)
+		for (int i = 9; (i < 17) && (i <= gCoreCount); i++)
 		{
 			core_limit = bitfield32(msr, 7, 0);
 		
 			if (core_limit)
 			{
-				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > gCoreCount) && core_limit) ? "(garbage / unused)" : "");
 		
 				msr = (msr >> 8);
 			}
@@ -554,20 +561,20 @@ void AppleIntelInfo::reportMSRs(void)
 	//
 	// Intel® Xeon® Processor E5 v3 Family
 	//
-	if (number_of_cores > 16)
+	if (gCoreCount > 16)
 	{
 		msr = rdmsr64(MSR_TURBO_RATIO_LIMIT2);
 	
 		IOLOG("\nMSR_TURBO_RATIO_LIMIT2...........(0x1AF) : 0x%llX\n", msr);
 		IOLOG("------------------------------------------\n");
 	
-		for (int i = 17; (i < 33) && (i <= number_of_cores); i++)
+		for (int i = 17; (i < 33) && (i <= gCoreCount); i++)
 		{
 			core_limit = bitfield32(msr, 7, 0);
 		
 			if (core_limit)
 			{
-				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > number_of_cores) && core_limit) ? "(garbage / unused)" : "");
+				IOLOG(" - Maximum Ratio Limit for C%02d.......... : %X (%u MHz) %s\n", i, core_limit, (core_limit * gBclk), ((i > gCoreCount) && core_limit) ? "(garbage / unused)" : "");
 		
 				msr = (msr >> 8);
 			}
@@ -609,7 +616,7 @@ void AppleIntelInfo::reportMSRs(void)
 	if (msr)
 	{
 		IOLOG("------------------------------------------\n");
-		IOLOG(" - C1E Enable............................: %llu\n", bitfield32(msr, 1, 1));
+		IOLOG(" - C1E Enable............................: %llu %s\n", bitfield32(msr, 1, 1), bitfield32(msr, 1, 1) ? "(enabled)": "(disabled)");
 	}
 
 	msr = rdmsr64(MSR_RAPL_POWER_UNIT);
@@ -846,6 +853,7 @@ void AppleIntelInfo::reportMSRs(void)
 
 			IOLOG("MSR_PKG_C2_RESIDENCY.............(0x60d) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C2_RESIDENCY));
 			IOLOG("MSR_PKG_C3_RESIDENCY.............(0x3f8) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C3_RESIDENCY));
+			break;
 
 		default:
 

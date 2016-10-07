@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"1.8c"
+#define VERSION					"1.8e"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
