@@ -466,7 +466,67 @@ void AppleIntelInfo::reportMSRs(void)
 	}
 
 	IOLOG("\nIA32_CLOCK_MODULATION............(0x19A) : 0x%llX\n", (unsigned long long)rdmsr64(IA32_CLOCK_MODULATION));
-	IOLOG("IA32_THERM_STATUS................(0x19C) : 0x%llX\n", (unsigned long long)rdmsr64(IA32_THERM_STATUS));
+
+	msr = rdmsr64(IA32_THERM_INTERRUPT);
+
+	IOLOG("\nIA32_THERM_INTERRUPT.............(0x19B) : 0x%llX\n", msr);
+
+	if (msr)
+	{
+		IOLOG("------------------------------------------\n");
+		IOLOG(" - High-Temperature Interrupt Enable.... : %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - Low-Temperature Interrupt Enable..... : %s\n", (msr & (1 <<  1)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - PROCHOT# Interrupt Enable............ : %s\n", (msr & (1 <<  2)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - FORCEPR# Interrupt Enable............ : %s\n", (msr & (1 <<  3)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - Critical Temperature Interrupt Enable : %s\n", (msr & (1 <<  4)) ? "1 (enabled)" : "0 (disabled)");
+		// bit 7:5 Reserved.
+		IOLOG(" - Threshold #1 Value................... : %llu\n", bitfield32(msr, 14, 8));
+		IOLOG(" - Threshold #1 Interrupt Enable........ : %s\n", (msr & (1 << 15)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - Threshold #2 Value................... : %llu\n", bitfield32(msr, 22, 16));
+		IOLOG(" - Threshold #2 Interrupt Enable........ : %s\n", (msr & (1 << 23)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - Power Limit Notification Enable...... : %s\n", (msr & (1 << 24)) ? "1 (enabled)" : "0 (disabled)");
+		// bit 63:25 Reserved.
+	}
+
+	msr = rdmsr64(IA32_THERM_STATUS);
+
+	IOLOG("\nIA32_THERM_STATUS................(0x19C) : 0x%llX\n", msr);
+
+	if (msr)
+	{
+		IOLOG("------------------------------------------\n");
+		IOLOG(" - Thermal Status....................... : %s\n", (msr & (1 <<  0)) ? "1" : "0");
+		IOLOG(" - Thermal Log.......................... : %s\n", (msr & (1 <<  1)) ? "1" : "0");
+		IOLOG(" - PROCHOT # or FORCEPR# event.......... : %s\n", (msr & (1 <<  2)) ? "1" : "0");
+		IOLOG(" - PROCHOT # or FORCEPR# log............ : %s\n", (msr & (1 <<  3)) ? "1" : "0");
+		IOLOG(" - Critical Temperature Status.......... : %s\n", (msr & (1 <<  4)) ? "1" : "0");
+		IOLOG(" - Critical Temperature log............. : %s\n", (msr & (1 <<  5)) ? "1" : "0");
+		IOLOG(" - Thermal Threshold #1 Status.......... : %s\n", (msr & (1 <<  6)) ? "1" : "0");
+		IOLOG(" - Thermal Threshold #1 log............. : %s\n", (msr & (1 <<  7)) ? "1" : "0");
+		IOLOG(" - Thermal Threshold #2 Status.......... : %s\n", (msr & (1 <<  8)) ? "1" : "0");
+		IOLOG(" - Thermal Threshold #2 log............. : %s\n", (msr & (1 <<  9)) ? "1" : "0");
+		IOLOG(" - Power Limitation Status.............. : %s\n", (msr & (1 << 10)) ? "1" : "0");
+		IOLOG(" - Power Limitation log................. : %s\n", (msr & (1 << 11)) ? "1" : "0");
+		IOLOG(" - Current Limit Status................. : %s\n", (msr & (1 << 12)) ? "1" : "0");
+		IOLOG(" - Current Limit log.................... : %s\n", (msr & (1 << 13)) ? "1" : "0");
+		IOLOG(" - Cross Domain Limit Status............ : %s\n", (msr & (1 << 14)) ? "1" : "0");
+		IOLOG(" - Cross Domain Limit log............... : %s\n", (msr & (1 << 15)) ? "1" : "0");
+		IOLOG(" - Digital Readout...................... : %llu\n", bitfield32(msr, 22, 16));
+		// bit 23-26 Reserved.
+		IOLOG(" - Resolution in Degrees Celsius........ : %llu\n", bitfield32(msr, 30, 27));
+		IOLOG(" - Reading Valid........................ : %s\n", (msr & (1 << 31)) ? "1 (valid)" : "0 (invalid)");
+		// bit 63-32 Reserved.
+	}
+
+	msr = rdmsr64(MSR_THERM2_CTL);
+
+	IOLOG("\nMSR_THERM2_CTL...................(0x19D) : 0x%llX\n", msr);
+
+	if (msr)
+	{
+		IOLOG("------------------------------------------\n");
+		IOLOG(" - Thermal Monitor Selection (TM1/TM2).. : %s\n", (msr & (1 << 16)) ? "1 (TM1 thermally-initiated on-die modulation of the stop-clock duty cycle)" : "0 (TM2 thermally-initiated frequency transitions)");
+	}
 
 	msr = rdmsr64(IA32_MISC_ENABLES);
 
@@ -476,12 +536,17 @@ void AppleIntelInfo::reportMSRs(void)
 	{
 		IOLOG("------------------------------------------\n");
 		IOLOG(" - Fast-Strings......................... : %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
+		// bit 2:1 Reserved.
 		IOLOG(" - Automatic Thermal Control Circuit.... : %s\n", (msr & (1 <<  3)) ? "1 (enabled)" : "0 (disabled)");
+		// bit 6:4 Reserved.
 		IOLOG(" - Performance Monitoring............... : %s\n", (msr & (1 <<  7)) ? "1 (available)" : "not available");
+		// bit 8 Reserved.
 		IOLOG(" - Processor Event Based Sampling....... : %s\n", (msr & (1 << 12)) ? "1 (PEBS not supported)" : "0 (PEBS supported)");
 		IOLOG(" - Enhanced Intel SpeedStep Technology.. : %s\n", (msr & (1 << 16)) ? "1 (enabled)" : "0 (disabled)");
 		IOLOG(" - MONITOR FSM.......................... : %s\n", (msr & (1 << 18)) ? "1 (MONITOR/MWAIT supported)" : "0 (MONITOR/MWAIT not supported)");
 		IOLOG(" - CFG Lock............................. : %s\n", (msr & (1 << 20)) ? "1 (MSR locked until next reset)" : "0 (MSR not locked)");
+		IOLOG(" - xTPR Message Disable................. : %s\n", (msr & (1 << 23)) ? "1 (disabled)" : "0 (enabled)");
+
 	}
 
 	msr = rdmsr64(MSR_TEMPERATURE_TARGET);
@@ -616,7 +681,8 @@ void AppleIntelInfo::reportMSRs(void)
 	if (msr)
 	{
 		IOLOG("------------------------------------------\n");
-		IOLOG(" - C1E Enable............................: %llu %s\n", bitfield32(msr, 1, 1), bitfield32(msr, 1, 1) ? "(enabled)": "(disabled)");
+		IOLOG(" - Bi-Directional Processor Hot..........: %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - C1E Enable............................: %s\n", (msr & (1 <<  1)) ? "1 (enabled)": "0 (disabled)");
 	}
 
 	msr = rdmsr64(MSR_RAPL_POWER_UNIT);
@@ -1247,6 +1313,15 @@ bool AppleIntelInfo::start(IOService *provider)
 
 			// wrmsr64(MSR_PP0_POWER_LIMIT, 0);
 			// wrmsr64(MSR_PP0_CURRENT_CONFIG, 0x10141400001F40);
+			//
+			// Example code for Fabio:
+			//
+			// UInt64 msr_value = rdmsr64(MSR_PKG_POWER_LIMIT);
+			// msr_value &= ~(1L << 16);
+			// msr_value |= (1L << 16);
+			// msr_value &= ~(1L << 48);
+			// msr_value |= (1L << 48);
+			// wrmsr64(MSR_PKG_POWER_LIMIT, msr_value);
 
 #if REPORT_IGPU_P_STATES
 			OSBoolean * key_logIGPU = OSDynamicCast(OSBoolean, getProperty("logIGPU"));
