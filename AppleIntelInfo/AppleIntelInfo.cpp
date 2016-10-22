@@ -1311,18 +1311,6 @@ bool AppleIntelInfo::start(IOService *provider)
 			IOLOG("\nSettings:\n------------------------------------------\nlogMSRs..................................: %d\n", logMSRs);
 #endif
 
-			// wrmsr64(MSR_PP0_POWER_LIMIT, 0);
-			// wrmsr64(MSR_PP0_CURRENT_CONFIG, 0x10141400001F40);
-			//
-			// Example code for Fabio:
-			//
-			// UInt64 msr_value = rdmsr64(MSR_PKG_POWER_LIMIT);
-			// msr_value &= ~(1L << 16);
-			// msr_value |= (1L << 16);
-			// msr_value &= ~(1L << 48);
-			// msr_value |= (1L << 48);
-			// wrmsr64(MSR_PKG_POWER_LIMIT, msr_value);
-
 #if REPORT_IGPU_P_STATES
 			OSBoolean * key_logIGPU = OSDynamicCast(OSBoolean, getProperty("logIGPU"));
 
