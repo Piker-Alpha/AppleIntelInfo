@@ -44,6 +44,8 @@
 			<true/>
 			<key>logMSRs</key>
 			<true/>
+			<key>enableHWP</key>
+			<false/>
 		</dict>
 	</dict>
 	<key>NSHumanReadableCopyright</key>

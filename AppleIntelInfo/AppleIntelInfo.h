@@ -36,13 +36,14 @@
 
 #define super IOService
 
-#define VERSION					"1.9"
+#define VERSION					"2.0"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
 #define REPORT_C_STATES			1
 #define REPORT_IPG_STYLE		1
 #define REPORT_INTEL_REGS		0
+#define ENABLE_HWP				1
 
 #define WRITE_LOG_REPORT		1
 
@@ -228,11 +229,11 @@ public:
 	UInt8	gMaxRatio		= 0;
 	UInt8	gCpuModel		= 0;
 	UInt8	gCoreCount		= 0;
-	UInt8	gThreadCount	= 0;
 };
 
 OSDefineMetaClassAndStructors(AppleIntelInfo, IOService)
 
+UInt8	gThreadCount	= 0;
 UInt8	gCoreStates	= 0ULL;
 
 #if REPORT_C_STATES

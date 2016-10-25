@@ -69,15 +69,14 @@ void AppleIntelInfo::reportHWP(void)
 {
 	uint32_t cpuid_reg[4];
 	unsigned long long msr;
-	unsigned long long hwp_enabled;
 
 	do_cpuid(0x00000006, cpuid_reg);
 
 	if ((cpuid_reg[eax] & 0x80) == 0x80)
 	{
-		gHwpEnabled = (rdmsr64(IA32_PM_ENABLE) & 1);
+		msr = rdmsr64(IA32_PM_ENABLE);
 
-		if (gHwpEnabled)
+		if (msr & 1)
 		{
 			short mantissa	= 0;
 			short exponent	= 0;
@@ -92,8 +91,8 @@ void AppleIntelInfo::reportHWP(void)
 				IOLOG("MSR_PPERF........................(0x63E) : 0x%llX (%d)\n", msr, multiplier);
 			}
 
-			IOLOG("\nIA32_PM_ENABLE...................(0x770) : 0x%llX ", hwp_enabled);
-			IOLOG("(HWP Enabled)\n");
+			IOLOG("\nIA32_PM_ENABLE...................(0x770) : 0x%llX ", msr);
+			IOLOG("(HWP Supported and Enabled)\n");
 			
 			msr = rdmsr64(IA32_HWP_CAPABILITIES);
 
@@ -155,7 +154,7 @@ void AppleIntelInfo::reportHWP(void)
 		}
 		else
 		{
-			IOLOG("(HWP Disabled)\n");
+			IOLOG("(HWP Supported but not (yet) enabled)\n");
 		}
 	}
 }
@@ -537,13 +536,20 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG("------------------------------------------\n");
 		IOLOG(" - Fast-Strings......................... : %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
 		// bit 2:1 Reserved.
+		IOLOG(" - FOPCODE compatibility mode Enable.... : %llu\n", (msr & (1 <<  2)));
 		IOLOG(" - Automatic Thermal Control Circuit.... : %s\n", (msr & (1 <<  3)) ? "1 (enabled)" : "0 (disabled)");
 		// bit 6:4 Reserved.
+		IOLOG(" - Split-lock Disable................... : %llu\n", (msr & (1 <<  4)));
 		IOLOG(" - Performance Monitoring............... : %s\n", (msr & (1 <<  7)) ? "1 (available)" : "not available");
 		// bit 8 Reserved.
+		IOLOG(" - Bus Lock On Cache Line Splits Disable : %llu\n", (msr & (1 <<  8)));
+		IOLOG(" - Hardware prefetch Disable............ : %llu\n", (msr & (1 <<  9)));
+
 		IOLOG(" - Processor Event Based Sampling....... : %s\n", (msr & (1 << 12)) ? "1 (PEBS not supported)" : "0 (PEBS supported)");
+		IOLOG(" - GV1/2 legacy Enable.................. : %llu\n", (msr & (1 << 15)));
 		IOLOG(" - Enhanced Intel SpeedStep Technology.. : %s\n", (msr & (1 << 16)) ? "1 (enabled)" : "0 (disabled)");
 		IOLOG(" - MONITOR FSM.......................... : %s\n", (msr & (1 << 18)) ? "1 (MONITOR/MWAIT supported)" : "0 (MONITOR/MWAIT not supported)");
+		IOLOG(" - Adjacent sector prefetch Disable..... : %llu\n", (msr & (1 << 19)));
 		IOLOG(" - CFG Lock............................. : %s\n", (msr & (1 << 20)) ? "1 (MSR locked until next reset)" : "0 (MSR not locked)");
 		IOLOG(" - xTPR Message Disable................. : %s\n", (msr & (1 << 23)) ? "1 (disabled)" : "0 (enabled)");
 
@@ -1047,12 +1053,11 @@ inline void getCStates(void *magic)
 		gC7Cores |= (1 << logicalCoreNumber);
 	}
 
-	/* if (logicalCoreNumber < 12)
+	if (logicalCoreNumber < gThreadCount)
 	{
-		uint64_t stateValue = rdmsr64(MSR_IA32_PERF_CONTROL);
-		stateValue = 0x2D00; // 0x2800;
-		wrmsr64(MSR_IA32_PERF_CONTROL, stateValue);
-	} */
+		// wrmsr64(0x1FC, rdmsr64(0x1FC) & 0xFFFFFFFE);
+		// wrmsr64(0x1FC, rdmsr64(0x1FC) | 0x1);
+	}
 
 	uint64_t msr = rdmsr64(0x10);
 	gTSC = rdtsc64();
@@ -1297,9 +1302,32 @@ bool AppleIntelInfo::start(IOService *provider)
 		if (simpleLock)
 		{
 			mCtx = vfs_context_current();
+			uint32_t cpuid_reg[4];
 
 			IOLOG("\nAppleIntelInfo.kext v%s Copyright © 2012-2016 Pike R. Alpha. All rights reserved\n", VERSION);
 			// os_log_info(OS_LOG_DEFAULT, "v%s Copyright © 2012-2016 Pike R. Alpha. All rights reserved", VERSION);
+#if ENABLE_HWP
+			OSBoolean * key_enableHWP = OSDynamicCast(OSBoolean, getProperty("enableHWP"));
+			
+			if (key_enableHWP)
+			{
+				if ((bool)key_enableHWP->getValue())
+				{
+					do_cpuid(0x00000006, cpuid_reg);
+				
+					if ((cpuid_reg[eax] & 0x80) == 0x80)
+					{
+						if (rdmsr64(IA32_PM_ENABLE) == 0)
+						{
+							wrmsr64(IA32_PM_ENABLE, 1);
+						}
+					}
+				}
+			}
+			
+			IOLOG("enableHWP................................: %d\n", (bool)key_enableHWP->getValue());
+#endif
+
 #if REPORT_MSRS
 			OSBoolean * key_logMSRs = OSDynamicCast(OSBoolean, getProperty("logMSRs"));
 
@@ -1369,7 +1397,6 @@ bool AppleIntelInfo::start(IOService *provider)
 			msr = rdmsr64(MSR_IA32_PERF_STS);
 			gCoreMultipliers |= (1ULL << (msr >> 8));
 			
-			uint32_t cpuid_reg[4];
 			do_cpuid(0x00000001, cpuid_reg);
 			
 			gCpuModel = bitfield32(cpuid_reg[eax], 7,  4) + (bitfield32(cpuid_reg[eax], 19, 16) << 4);
