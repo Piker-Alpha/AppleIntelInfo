@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"2.0"
+#define VERSION					"2.1"
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -166,6 +166,7 @@ private:
 	void reportMSRs(void);
 	void reportHWP(void);
 	void reportHDC(void);
+	bool hasCPUFeature(long targetCPUFeature);
 
 	bool logMSRs		= true;		// Set <key>logIGPU</key> to <false/> in Info.plist to disable this feature.
 #endif

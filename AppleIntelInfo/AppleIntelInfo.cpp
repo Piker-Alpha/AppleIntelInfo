@@ -138,11 +138,15 @@ void AppleIntelInfo::reportHWP(void)
 			IOLOG(" - Maximum Performance................. : %llu\n", bitfield32(msr, 15, 8));
 			IOLOG(" - Desired Performance................. : %llu\n", bitfield32(msr, 23, 16));
 			IOLOG(" - Energy Efficient Performance........ : %llu\n", bitfield32(msr, 31, 24));
-			
-			mantissa = bitfield32(msr, 38, 32);
-			exponent = bitfield32(msr, 41, 39);
 
-			IOLOG(" - Activity Window..................... : %d, %d\n", mantissa, exponent);
+			if ((cpuid_reg[eax] & 0x200) == 0x200)
+			{
+				mantissa = bitfield32(msr, 38, 32);
+				exponent = bitfield32(msr, 41, 39);
+
+				IOLOG(" - Activity Window..................... : %d, %d\n", mantissa, exponent);
+			}
+
 			IOLOG(" - Package Control..................... : %s\n", (msr & 0x40000000000) ? "1 (control inputs to be derived from IA32_HWP_REQUEST_PKG)": "0");
 			
 			msr = rdmsr64(IA32_HWP_STATUS);
@@ -305,6 +309,26 @@ const char * AppleIntelInfo::getUnitText(uint8_t unit)
 
 	return NULL;
 }
+
+
+//==============================================================================
+
+bool AppleIntelInfo::hasCPUFeature(long targetCPUFeature)
+{
+	uint32_t cpuid_reg[4];
+	do_cpuid(0x00000001, cpuid_reg);
+	
+	uint64_t cpuFeatures = cpuid_reg[ecx];
+	cpuFeatures = (cpuFeatures << 32) | cpuid_reg[eax];
+
+	if (cpuFeatures & targetCPUFeature)
+	{
+		return true;
+	}
+	
+	return false;
+}
+
 
 //==============================================================================
 
@@ -517,14 +541,17 @@ void AppleIntelInfo::reportMSRs(void)
 		// bit 63-32 Reserved.
 	}
 
-	msr = rdmsr64(MSR_THERM2_CTL);
-
-	IOLOG("\nMSR_THERM2_CTL...................(0x19D) : 0x%llX\n", msr);
-
-	if (msr)
+	if (hasCPUFeature(CPUID_FEATURE_TM2))
 	{
-		IOLOG("------------------------------------------\n");
-		IOLOG(" - Thermal Monitor Selection (TM1/TM2).. : %s\n", (msr & (1 << 16)) ? "1 (TM1 thermally-initiated on-die modulation of the stop-clock duty cycle)" : "0 (TM2 thermally-initiated frequency transitions)");
+		msr = rdmsr64(MSR_THERM2_CTL);
+
+		IOLOG("\nMSR_THERM2_CTL...................(0x19D) : 0x%llX\n", msr);
+
+		if (msr)
+		{
+			IOLOG("------------------------------------------\n");
+			IOLOG(" - Thermal Monitor Selection (TM1/TM2).. : %s\n", (msr & (1 << 16)) ? "1 (TM1 thermally-initiated on-die modulation of the stop-clock duty cycle)" : "0 (TM2 thermally-initiated frequency transitions)");
+		}
 	}
 
 	msr = rdmsr64(IA32_MISC_ENABLES);
@@ -1304,7 +1331,7 @@ bool AppleIntelInfo::start(IOService *provider)
 			mCtx = vfs_context_current();
 			uint32_t cpuid_reg[4];
 
-			IOLOG("\nAppleIntelInfo.kext v%s Copyright © 2012-2016 Pike R. Alpha. All rights reserved\n", VERSION);
+			IOLOG("\nAppleIntelInfo.kext v%s Copyright © 2012-2017 Pike R. Alpha. All rights reserved\n", VERSION);
 			// os_log_info(OS_LOG_DEFAULT, "v%s Copyright © 2012-2016 Pike R. Alpha. All rights reserved", VERSION);
 #if ENABLE_HWP
 			OSBoolean * key_enableHWP = OSDynamicCast(OSBoolean, getProperty("enableHWP"));
@@ -1509,11 +1536,11 @@ bool AppleIntelInfo::start(IOService *provider)
 							IOLOG("\nIGPU Info:\n------------------------------------------\n");
 							IOLOG("IGPU Current Frequency...................: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x01])); // RP_STATE_RATIO (CURRENT_FREQUENCY)
 							// Maximum RPN base frequency capability for the Integrated GFX Engine (GT).
-							IOLOG("IGPU Minimum Frequency...................: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x52])); // RPN_CAP (MIN_FREQUENCY)
+							IOLOG("IGPU Minimum Frequency...................: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x52])); // RPN_CAP (MIN_FREQUENCY) See also: DSDT->RPNC
 							// Maximum RP1 base frequency capability for the Integrated GFX Engine (GT).
-							IOLOG("IGPU Maximum Non-Turbo Frequency.........: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x51])); // RP1_CAP (MAX_NON_TURBO)
+							IOLOG("IGPU Maximum Non-Turbo Frequency.........: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x51])); // RP1_CAP (MAX_NON_TURBO) See also: DSDT->RP1C
 							// Maximum RP0 base frequency capability for the Integrated GFX Engine (GT).
-							IOLOG("IGPU Maximum Turbo Frequency.............: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x50])); // RP0_CAP (MAX_TURBO))
+							IOLOG("IGPU Maximum Turbo Frequency.............: %4d MHz\n", IGPU_RATIO_TO_FREQUENCY((UInt8)gMchbar[0x50])); // RP0_CAP (MAX_TURBO)) See also: DSDT->RP0C
 
 							// Maximum base frequency limit for the Integrated GFX Engine (GT) allowed during run-time.
 							if (gMchbar[0x4C] == 255)
