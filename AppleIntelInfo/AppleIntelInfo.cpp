@@ -167,7 +167,7 @@ void AppleIntelInfo::reportHWP(void)
 #endif
 
 
-#if REPORT_MSSRS
+#if REPORT_MSRS
 //==============================================================================
 
 void AppleIntelInfo::reportHDC(void)
