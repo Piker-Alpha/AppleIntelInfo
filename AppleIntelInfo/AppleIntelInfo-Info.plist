@@ -15,11 +15,11 @@
 	<key>CFBundlePackageType</key>
 	<string>KEXT</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.1</string>
+	<string>2.2</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>2.1</string>
+	<string>2.2</string>
 	<key>IOKitPersonalities</key>
 	<dict>
 		<key>AppleIntelInfo</key>
@@ -41,7 +41,7 @@
 			<key>logIPGStyle</key>
 			<true/>
 			<key>logIntelRegs</key>
-			<true/>
+			<false/>
 			<key>logMSRs</key>
 			<true/>
 			<key>enableHWP</key>

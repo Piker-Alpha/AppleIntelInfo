@@ -12,6 +12,7 @@
 
 #include "AppleIntelInfo.h"
 
+
 #if WRITE_LOG_REPORT
 //==============================================================================
 
@@ -63,6 +64,7 @@ int AppleIntelInfo::writeReport(void)
 #endif
 
 
+#if REPORT_MSRS
 //==============================================================================
 
 void AppleIntelInfo::reportHWP(void)
@@ -162,8 +164,10 @@ void AppleIntelInfo::reportHWP(void)
 		}
 	}
 }
+#endif
 
 
+#if REPORT_MSSRS
 //==============================================================================
 
 void AppleIntelInfo::reportHDC(void)
@@ -253,6 +257,8 @@ void AppleIntelInfo::reportHDC(void)
 		
 	}
 }
+#endif
+
 
 //==============================================================================
 
@@ -311,6 +317,7 @@ const char * AppleIntelInfo::getUnitText(uint8_t unit)
 }
 
 
+#if REPORT_MSRS
 //==============================================================================
 
 bool AppleIntelInfo::hasCPUFeature(long targetCPUFeature)
@@ -328,8 +335,10 @@ bool AppleIntelInfo::hasCPUFeature(long targetCPUFeature)
 	
 	return false;
 }
+#endif
 
 
+#if REPORT_MSRS
 //==============================================================================
 
 void AppleIntelInfo::reportMSRs(void)
@@ -1056,6 +1065,7 @@ void AppleIntelInfo::reportMSRs(void)
 
 	reportHWP();
 }
+#endif
 
 
 #if REPORT_C_STATES
@@ -1098,6 +1108,7 @@ inline void getCStates(void *magic)
 }
 #endif
 
+
 //==============================================================================
 
 IOReturn AppleIntelInfo::loopTimerEvent(void)
@@ -1132,9 +1143,9 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 
 	loopLock = true;
 
+#if REPORT_IPG_STYLE
 	UInt8 pState = 0;
 
-#if REPORT_IPG_STYLE
 	if (logIPGStyle)
 	{
 		UInt64 aPerf = 0;

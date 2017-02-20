@@ -36,7 +36,11 @@
 
 #define super IOService
 
-#define VERSION					"2.1"
+#define VERSION					"2.2"
+
+/*
+ * Build settings (0 = disable feature / 1 = enable feature)
+ */
 
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
@@ -79,7 +83,7 @@
 ((UInt32)(PCIEX_BASE_ADDRESS + ((UInt8)(bus) << 20) + \
 ((UInt8)(dev) << 15) + ((UInt8)(func) << 12) + (reg)))
 
-#if WRITE_LOG_REPORT
+#ifdef WRITE_LOG_REPORT
 	#define	FILE_PATH "/tmp/AppleIntelInfo.dat"
 
 	#define TEMP_BUFFER_SIZE	256
@@ -149,7 +153,7 @@ private:
 	IOWorkLoop			*workLoop;
 	IOTimerEventSource	*timerEventSource;
 	
-#if REPORT_IGPU_P_STATES
+#ifdef REPORT_IGPU_P_STATES
 	IOMemoryDescriptor	*memDescriptor;
 	IOMemoryMap			*memoryMap;
 
@@ -162,7 +166,7 @@ private:
 
 	int writeReport(void);
 
-#if REPORT_MSRS
+#ifdef REPORT_MSRS
 	void reportMSRs(void);
 	void reportHWP(void);
 	void reportHDC(void);
@@ -175,15 +179,15 @@ private:
 
 	bool loopLock		= false;
 
-#if REPORT_C_STATES
+#ifdef REPORT_C_STATES
 	bool logCStates		= true;		//  Set <key>logCStates</key> to <false/> in Info.plist to disable this feature.
 #endif
 
-#if REPORT_IPG_STYLE
+#ifdef REPORT_IPG_STYLE
 	bool logIPGStyle	= true;		//  Set <key>logIPGStyle</key> to <false/> in Info.plist to disable this feature.
 #endif
 
-#if REPORT_INTEL_REGS
+#ifdef REPORT_INTEL_REGS
 	bool logIntelRegs	= true;		//  Set <key>logIntelRegs</key> to <false/> in Info.plist to disable this feature.
 
 	#define DEBUGSTRING(func) void func(char *result, int len, UInt32 reg, UInt32 val)
@@ -214,7 +218,7 @@ private:
 	vfs_context_t mCtx				= NULL;
 	long reportFileOffset			= 0L;
 
-#if WRITE_LOG_REPORT
+#ifdef WRITE_LOG_REPORT
 	char tempBuffer[TEMP_BUFFER_SIZE];
 	char logBuffer[WRITE_BUFFER_SIZE];
 #endif
@@ -255,7 +259,7 @@ UInt64	gCoreMultipliers = 0ULL;
 
 uint64_t gTSC = 0;
 
-#if REPORT_IGPU_P_STATES
+#ifdef REPORT_IGPU_P_STATES
 UInt8	* gMchbar	= NULL;
 #endif
 
