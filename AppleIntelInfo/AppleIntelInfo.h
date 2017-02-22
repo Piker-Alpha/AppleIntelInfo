@@ -36,12 +36,13 @@
 
 #define super IOService
 
-#define VERSION					"2.2"
+#define VERSION					"2.3"
 
 /*
  * Build settings (0 = disable feature / 1 = enable feature)
  */
 
+#define REPORT_RAPL_MSRS		1
 #define REPORT_MSRS				1
 #define REPORT_IGPU_P_STATES	1
 #define REPORT_C_STATES			1
@@ -83,7 +84,7 @@
 ((UInt32)(PCIEX_BASE_ADDRESS + ((UInt8)(bus) << 20) + \
 ((UInt8)(dev) << 15) + ((UInt8)(func) << 12) + (reg)))
 
-#ifdef WRITE_LOG_REPORT
+#if WRITE_LOG_REPORT
 	#define	FILE_PATH "/tmp/AppleIntelInfo.dat"
 
 	#define TEMP_BUFFER_SIZE	256
@@ -96,8 +97,22 @@
 #else
 	#include <os/log.h>
 
-	#define IOLOG(fmt, args...) os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_INFO, fmt, ##args)
+//	#define IOLOG(fmt, args...) os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_INFO, fmt, ##args)
+	#define IOLOG(fmt, args...) os_log_info(OS_LOG_DEFAULT, fmt, ##args);
 #endif
+
+
+#define RAPL_BASE				0
+#define RAPL_PKG				(1 << 0)
+#define RAPL_PKG_PERF_STATUS	(1 << 1)
+#define RAPL_PKG_POWER_INFO		(1 << 2)
+#define RAPL_DRAM				(1 << 3)
+#define RAPL_DRAM_PERF_STATUS	(1 << 4)
+#define RAPL_DRAM_POWER_INFO	(1 << 5)
+#define RAPL_CORES				(1 << 6)
+#define RAPL_CORE_POLICY		(1 << 7)
+#define RAPL_GFX				(1 << 8)
+
 
 //------------------------------------------------------------------------------
 
@@ -166,6 +181,11 @@ private:
 
 	int writeReport(void);
 
+#ifdef REPORT_RAPL_MSRS
+	bool supportsRAPL(UInt16 aTargetRAPLFeature);
+	void reportRAPL(UInt16 aTargetRAPL);
+#endif
+
 #ifdef REPORT_MSRS
 	void reportMSRs(void);
 	void reportHWP(void);
@@ -218,7 +238,7 @@ private:
 	vfs_context_t mCtx				= NULL;
 	long reportFileOffset			= 0L;
 
-#ifdef WRITE_LOG_REPORT
+#if WRITE_LOG_REPORT
 	char tempBuffer[TEMP_BUFFER_SIZE];
 	char logBuffer[WRITE_BUFFER_SIZE];
 #endif
