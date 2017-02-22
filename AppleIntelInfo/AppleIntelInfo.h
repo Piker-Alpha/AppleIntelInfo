@@ -97,8 +97,7 @@
 #else
 	#include <os/log.h>
 
-//	#define IOLOG(fmt, args...) os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_INFO, fmt, ##args)
-	#define IOLOG(fmt, args...) os_log_info(OS_LOG_DEFAULT, fmt, ##args);
+	#define IOLOG(fmt, args...) os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_INFO, fmt, ##args)
 #endif
 
 
