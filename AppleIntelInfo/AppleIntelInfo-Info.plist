@@ -53,13 +53,13 @@
 	<key>OSBundleLibraries</key>
 	<dict>
 		<key>com.apple.kpi.bsd</key>
-		<string>16.5</string>
+		<string>10.4</string>
 		<key>com.apple.kpi.iokit</key>
-		<string>16.5</string>
+		<string>10.4</string>
 		<key>com.apple.kpi.libkern</key>
-		<string>16.5</string>
+		<string>10.4</string>
 		<key>com.apple.kpi.mach</key>
-		<string>16.5</string>
+		<string>10.4</string>
 		<key>com.apple.kpi.unsupported</key>
 		<string>10.5</string>
 	</dict>
