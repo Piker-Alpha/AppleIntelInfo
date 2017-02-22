@@ -91,7 +91,7 @@ bool AppleIntelInfo::supportsRAPL(UInt16 aTargetRAPLFeature)
 		case CPU_MODEL_SKYLAKE_DT:
 		case CPU_MODEL_KABYLAKE:
 		case CPU_MODEL_KABYLAKE_DT:
-			supportedRAPLFeatures = (RAPL_PKG | RAPL_DRAM | RAPL_DRAM_PERF_STATUS | RAPL_PKG_PERF_STATUS | RAPL_PKG_POWER_INFO);
+			supportedRAPLFeatures = (RAPL_PKG | RAPL_DRAM | RAPL_DRAM_PERF_STATUS | RAPL_PKG_PERF_STATUS | RAPL_GFX | RAPL_PKG_POWER_INFO);
 			break;
 
 		case CPU_MODEL_HASWELL_SVR:
@@ -1004,15 +1004,10 @@ void AppleIntelInfo::reportMSRs(void)
 
 	IOLOG("\nMSR_TURBO_ACTIVATION_RATIO.......(0x64C) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_TURBO_ACTIVATION_RATIO));
 
-#if REPORT_IGPU_P_STATES
-	if (igpuEnabled)
+	if (igpuEnabled && supportsRAPL(RAPL_GFX))
 	{
-		if (supportsRAPL(RAPL_GFX))
-		{
-			reportRAPL(RAPL_GFX);
-		}
+		reportRAPL(RAPL_GFX);
 	}
-#endif
 	
 	IOLOG("\n");
 
@@ -1458,7 +1453,7 @@ bool AppleIntelInfo::start(IOService *provider)
 			mCtx = vfs_context_create(NULL); // vfs_context_current();
 			uint32_t cpuid_reg[4];
 
-			IOLOG("AppleIntelInfo.kext v%s Copyright © 2012-2017 Pike R. Alpha. All rights reserved.", VERSION);
+			IOLOG("AppleIntelInfo.kext v%s Copyright © 2012-2017 Pike R. Alpha. All rights reserved.\n", VERSION);
 #if ENABLE_HWP
 			OSBoolean * key_enableHWP = OSDynamicCast(OSBoolean, getProperty("enableHWP"));
 			
