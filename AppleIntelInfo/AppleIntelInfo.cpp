@@ -703,11 +703,14 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG(" - C-state Range........................ : %llu (%s)\n", bitfield32(msr, 18, 16), "C-States not included, I/O MWAIT redirection not enabled");
 	}
 
-	IOLOG("\nIA32_MPERF.......................(0xE7)  : 0x%llX\n", (unsigned long long)rdmsr64(IA32_MPERF));
+	if ((cpuid_reg[ecx] & 1) == 1) // Are APERF and MPERF supported?
+	{
+		IOLOG("\nIA32_MPERF.......................(0xE7)  : 0x%llX\n", (unsigned long long)rdmsr64(IA32_MPERF));
 	
-	UInt64 aPerf = rdmsr64(IA32_APERF);
+		UInt64 aPerf = rdmsr64(IA32_APERF);
 
-	IOLOG("IA32_APERF.......................(0xE8)  : 0x%llX\n", aPerf);
+		IOLOG("IA32_APERF.......................(0xE8)  : 0x%llX\n", aPerf);
+	}
 
 	if (gCpuModel == CPU_MODEL_BROADWELL_E)
 	{
@@ -1542,11 +1545,18 @@ bool AppleIntelInfo::start(IOService *provider)
 #endif
 
 #if REPORT_IPG_STYLE
-			OSBoolean * key_logIPGStyle = OSDynamicCast(OSBoolean, getProperty("logIPGStyle"));
-			
-			if (key_logIPGStyle)
+			if ((cpuid_reg[ecx] & 1) == 1) // Are APERF and MPERF supported?
 			{
-				logIPGStyle = (bool)key_logIPGStyle->getValue();
+				OSBoolean * key_logIPGStyle = OSDynamicCast(OSBoolean, getProperty("logIPGStyle"));
+			
+				if (key_logIPGStyle)
+				{
+					logIPGStyle = (bool)key_logIPGStyle->getValue();
+				}
+			}
+			else
+			{
+				logIPGStyle = false;
 			}
 
 			IOLOG("logIPGStyle..............................: %d\n", logIPGStyle);
