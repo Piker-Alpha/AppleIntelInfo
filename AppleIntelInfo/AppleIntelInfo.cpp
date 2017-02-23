@@ -703,7 +703,7 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG(" - C-state Range........................ : %llu (%s)\n", bitfield32(msr, 18, 16), "C-States not included, I/O MWAIT redirection not enabled");
 	}
 
-	if ((cpuid_reg[ecx] & 1) == 1) // Are APERF and MPERF supported?
+	if (bitfield32(cpuid_reg[ecx], 0, 0) == 1) // Are APERF and MPERF supported?
 	{
 		IOLOG("\nIA32_MPERF.......................(0xE7)  : 0x%llX\n", (unsigned long long)rdmsr64(IA32_MPERF));
 	
@@ -751,57 +751,62 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG(" - Intel Dynamic Acceleration........... : %s\n", (msr & (1UL << 32)) ? "1 (IDA disengaged)" : "0 (IDA engaged)");
 	}
 
-	IOLOG("\nIA32_CLOCK_MODULATION............(0x19A) : 0x%llX\n", (unsigned long long)rdmsr64(IA32_CLOCK_MODULATION));
+	do_cpuid(0x00000001, cpuid_reg);
 
-	msr = rdmsr64(IA32_THERM_INTERRUPT);
-
-	IOLOG("\nIA32_THERM_INTERRUPT.............(0x19B) : 0x%llX\n", msr);
-
-	if (msr)
+	if (bitfield32(cpuid_reg[edx], 22, 22) == 1)
 	{
-		IOLOG("------------------------------------------\n");
-		IOLOG(" - High-Temperature Interrupt Enable.... : %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
-		IOLOG(" - Low-Temperature Interrupt Enable..... : %s\n", (msr & (1 <<  1)) ? "1 (enabled)" : "0 (disabled)");
-		IOLOG(" - PROCHOT# Interrupt Enable............ : %s\n", (msr & (1 <<  2)) ? "1 (enabled)" : "0 (disabled)");
-		IOLOG(" - FORCEPR# Interrupt Enable............ : %s\n", (msr & (1 <<  3)) ? "1 (enabled)" : "0 (disabled)");
-		IOLOG(" - Critical Temperature Interrupt Enable : %s\n", (msr & (1 <<  4)) ? "1 (enabled)" : "0 (disabled)");
-		// bit 7:5 Reserved.
-		IOLOG(" - Threshold #1 Value................... : %llu\n", bitfield32(msr, 14, 8));
-		IOLOG(" - Threshold #1 Interrupt Enable........ : %s\n", (msr & (1 << 15)) ? "1 (enabled)" : "0 (disabled)");
-		IOLOG(" - Threshold #2 Value................... : %llu\n", bitfield32(msr, 22, 16));
-		IOLOG(" - Threshold #2 Interrupt Enable........ : %s\n", (msr & (1 << 23)) ? "1 (enabled)" : "0 (disabled)");
-		IOLOG(" - Power Limit Notification Enable...... : %s\n", (msr & (1 << 24)) ? "1 (enabled)" : "0 (disabled)");
-		// bit 63:25 Reserved.
-	}
+		IOLOG("\nIA32_CLOCK_MODULATION............(0x19A) : 0x%llX\n", (unsigned long long)rdmsr64(IA32_CLOCK_MODULATION));
 
-	msr = rdmsr64(IA32_THERM_STATUS);
+		msr = rdmsr64(IA32_THERM_INTERRUPT);
 
-	IOLOG("\nIA32_THERM_STATUS................(0x19C) : 0x%llX\n", msr);
+		IOLOG("\nIA32_THERM_INTERRUPT.............(0x19B) : 0x%llX\n", msr);
 
-	if (msr)
-	{
-		IOLOG("------------------------------------------\n");
-		IOLOG(" - Thermal Status....................... : %s\n", (msr & (1 <<  0)) ? "1" : "0");
-		IOLOG(" - Thermal Log.......................... : %s\n", (msr & (1 <<  1)) ? "1" : "0");
-		IOLOG(" - PROCHOT # or FORCEPR# event.......... : %s\n", (msr & (1 <<  2)) ? "1" : "0");
-		IOLOG(" - PROCHOT # or FORCEPR# log............ : %s\n", (msr & (1 <<  3)) ? "1" : "0");
-		IOLOG(" - Critical Temperature Status.......... : %s\n", (msr & (1 <<  4)) ? "1" : "0");
-		IOLOG(" - Critical Temperature log............. : %s\n", (msr & (1 <<  5)) ? "1" : "0");
-		IOLOG(" - Thermal Threshold #1 Status.......... : %s\n", (msr & (1 <<  6)) ? "1" : "0");
-		IOLOG(" - Thermal Threshold #1 log............. : %s\n", (msr & (1 <<  7)) ? "1" : "0");
-		IOLOG(" - Thermal Threshold #2 Status.......... : %s\n", (msr & (1 <<  8)) ? "1" : "0");
-		IOLOG(" - Thermal Threshold #2 log............. : %s\n", (msr & (1 <<  9)) ? "1" : "0");
-		IOLOG(" - Power Limitation Status.............. : %s\n", (msr & (1 << 10)) ? "1" : "0");
-		IOLOG(" - Power Limitation log................. : %s\n", (msr & (1 << 11)) ? "1" : "0");
-		IOLOG(" - Current Limit Status................. : %s\n", (msr & (1 << 12)) ? "1" : "0");
-		IOLOG(" - Current Limit log.................... : %s\n", (msr & (1 << 13)) ? "1" : "0");
-		IOLOG(" - Cross Domain Limit Status............ : %s\n", (msr & (1 << 14)) ? "1" : "0");
-		IOLOG(" - Cross Domain Limit log............... : %s\n", (msr & (1 << 15)) ? "1" : "0");
-		IOLOG(" - Digital Readout...................... : %llu\n", bitfield32(msr, 22, 16));
-		// bit 23-26 Reserved.
-		IOLOG(" - Resolution in Degrees Celsius........ : %llu\n", bitfield32(msr, 30, 27));
-		IOLOG(" - Reading Valid........................ : %s\n", (msr & (1 << 31)) ? "1 (valid)" : "0 (invalid)");
-		// bit 63-32 Reserved.
+		if (msr)
+		{
+			IOLOG("------------------------------------------\n");
+			IOLOG(" - High-Temperature Interrupt Enable.... : %s\n", (msr & (1 <<  0)) ? "1 (enabled)" : "0 (disabled)");
+			IOLOG(" - Low-Temperature Interrupt Enable..... : %s\n", (msr & (1 <<  1)) ? "1 (enabled)" : "0 (disabled)");
+			IOLOG(" - PROCHOT# Interrupt Enable............ : %s\n", (msr & (1 <<  2)) ? "1 (enabled)" : "0 (disabled)");
+			IOLOG(" - FORCEPR# Interrupt Enable............ : %s\n", (msr & (1 <<  3)) ? "1 (enabled)" : "0 (disabled)");
+			IOLOG(" - Critical Temperature Interrupt Enable : %s\n", (msr & (1 <<  4)) ? "1 (enabled)" : "0 (disabled)");
+			// bit 7:5 Reserved.
+			IOLOG(" - Threshold #1 Value................... : %llu\n", bitfield32(msr, 14, 8));
+			IOLOG(" - Threshold #1 Interrupt Enable........ : %s\n", (msr & (1 << 15)) ? "1 (enabled)" : "0 (disabled)");
+			IOLOG(" - Threshold #2 Value................... : %llu\n", bitfield32(msr, 22, 16));
+			IOLOG(" - Threshold #2 Interrupt Enable........ : %s\n", (msr & (1 << 23)) ? "1 (enabled)" : "0 (disabled)");
+			IOLOG(" - Power Limit Notification Enable...... : %s\n", (msr & (1 << 24)) ? "1 (enabled)" : "0 (disabled)");
+			// bit 63:25 Reserved.
+		}
+
+		msr = rdmsr64(IA32_THERM_STATUS);
+
+		IOLOG("\nIA32_THERM_STATUS................(0x19C) : 0x%llX\n", msr);
+
+		if (msr)
+		{
+			IOLOG("------------------------------------------\n");
+			IOLOG(" - Thermal Status....................... : %s\n", (msr & (1 <<  0)) ? "1" : "0");
+			IOLOG(" - Thermal Log.......................... : %s\n", (msr & (1 <<  1)) ? "1" : "0");
+			IOLOG(" - PROCHOT # or FORCEPR# event.......... : %s\n", (msr & (1 <<  2)) ? "1" : "0");
+			IOLOG(" - PROCHOT # or FORCEPR# log............ : %s\n", (msr & (1 <<  3)) ? "1" : "0");
+			IOLOG(" - Critical Temperature Status.......... : %s\n", (msr & (1 <<  4)) ? "1" : "0");
+			IOLOG(" - Critical Temperature log............. : %s\n", (msr & (1 <<  5)) ? "1" : "0");
+			IOLOG(" - Thermal Threshold #1 Status.......... : %s\n", (msr & (1 <<  6)) ? "1" : "0");
+			IOLOG(" - Thermal Threshold #1 log............. : %s\n", (msr & (1 <<  7)) ? "1" : "0");
+			IOLOG(" - Thermal Threshold #2 Status.......... : %s\n", (msr & (1 <<  8)) ? "1" : "0");
+			IOLOG(" - Thermal Threshold #2 log............. : %s\n", (msr & (1 <<  9)) ? "1" : "0");
+			IOLOG(" - Power Limitation Status.............. : %s\n", (msr & (1 << 10)) ? "1" : "0");
+			IOLOG(" - Power Limitation log................. : %s\n", (msr & (1 << 11)) ? "1" : "0");
+			IOLOG(" - Current Limit Status................. : %s\n", (msr & (1 << 12)) ? "1" : "0");
+			IOLOG(" - Current Limit log.................... : %s\n", (msr & (1 << 13)) ? "1" : "0");
+			IOLOG(" - Cross Domain Limit Status............ : %s\n", (msr & (1 << 14)) ? "1" : "0");
+			IOLOG(" - Cross Domain Limit log............... : %s\n", (msr & (1 << 15)) ? "1" : "0");
+			IOLOG(" - Digital Readout...................... : %llu\n", bitfield32(msr, 22, 16));
+			// bit 23-26 Reserved.
+			IOLOG(" - Resolution in Degrees Celsius........ : %llu\n", bitfield32(msr, 30, 27));
+			IOLOG(" - Reading Valid........................ : %s\n", (msr & (1 << 31)) ? "1 (valid)" : "0 (invalid)");
+			// bit 63-32 Reserved.
+		}
 	}
 
 	if (hasCPUFeature(CPUID_FEATURE_TM2))
@@ -942,6 +947,8 @@ void AppleIntelInfo::reportMSRs(void)
 		}
 	}
 	
+	do_cpuid(0x00000006, cpuid_reg);
+
 	if (bitfield32(cpuid_reg[ecx], 3, 3) == 1)
 	{
 		msr = rdmsr64(IA32_ENERGY_PERF_BIAS);
@@ -1015,14 +1022,23 @@ void AppleIntelInfo::reportMSRs(void)
 
 	switch (gCpuModel)
 	{
-		case CPU_MODEL_IB_CORE:				// 0x3A - Intel 325462.pdf Vol.3C 35-126
-		case CPU_MODEL_IB_CORE_EX:			// 0x3B - Intel 325462.pdf Vol.3C 35-126
-		// case CPU_MODEL_IB_CORE_XEON:		// 0x3E - Intel 325462.pdf Vol.3C 35-126
-		case CPU_MODEL_HASWELL:				// 0x3C - Intel 325462.pdf Vol.3C 35-133
-		case CPU_MODEL_HASWELL_ULT:			// 0x45 - Intel 325462.pdf Vol.3C 35-133
-		case CPU_MODEL_CRYSTALWELL:			// 0x46 - Intel 325462.pdf Vol.3C 35-133
-		case CPU_MODEL_HASWELL_SVR:
-
+		case CPU_MODEL_IB_CORE:				// 0x3A - Intel 325462.pdf (Table 35-23) 35-174 Vol.3C
+		case CPU_MODEL_IB_CORE_EX:			// 0x3B
+			
+		case CPU_MODEL_HASWELL:				// 0x3C - Intel 325462.pdf (Table 35-27) 35-192 Vol.3C
+		case CPU_MODEL_HASWELL_SVR:			// 0x3F
+		case CPU_MODEL_HASWELL_ULT:			// 0x45
+			
+		case CPU_MODEL_CRYSTALWELL:			// 0x46
+		case CPU_MODEL_BROADWELL_H:			// 0x47
+		case CPU_MODEL_SKYLAKE:				// 0x4E
+		case 0x55:							// 0x55
+		case 0x56:							// 0x56
+		case 0x57:							// 0x57 - Intel 325462.pdf (Table 35-40) Vol.3C 35-275
+		case CPU_MODEL_SKYLAKE_DT:			// 0x5E - Intel 325462.pdf (Table 35-27) 35-192 Vol.3C
+		case CPU_MODEL_KABYLAKE:			// 0x8E
+		case CPU_MODEL_KABYLAKE_DT:			// 0x9E
+			
 			IOLOG("MSR_CONFIG_TDP_NOMINAL...........(0x648) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CONFIG_TDP_NOMINAL));
 			IOLOG("MSR_CONFIG_TDP_LEVEL1............(0x649) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CONFIG_TDP_LEVEL1));
 			IOLOG("MSR_CONFIG_TDP_LEVEL2............(0x64a) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CONFIG_TDP_LEVEL2));
@@ -1031,64 +1047,41 @@ void AppleIntelInfo::reportMSRs(void)
 			break;
 	}
 
-	switch (gCpuModel)
+	if (gCpuModel >= CPU_MODEL_SB_CORE)
 	{
-		case CPU_MODEL_SB_CORE:	
-		case CPU_MODEL_IB_CORE:
-		case CPU_MODEL_IB_CORE_EX:
-		case CPU_MODEL_IB_CORE_XEON:
-		case CPU_MODEL_HASWELL:
-		case CPU_MODEL_HASWELL_ULT:
-		case CPU_MODEL_CRYSTALWELL:
-		case CPU_MODEL_BROADWELL_E:
+		IOLOG("MSR_PKGC3_IRTL...................(0x60a) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC3_IRTL));
+		IOLOG("MSR_PKGC6_IRTL...................(0x60b) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC6_IRTL));
 
-			IOLOG("MSR_PKGC3_IRTL...................(0x60a) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC3_IRTL));
-			break;
-
-		case CPU_MODEL_NEHALEM:
-		case CPU_MODEL_NEHALEM_EX:
-			break;
+		if (gCheckC7)
+		{
+			IOLOG("MSR_PKGC7_IRTL...................(0x60c) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC7_IRTL));
+		}
 	}
 
-	IOLOG("MSR_PKGC6_IRTL...................(0x60b) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC6_IRTL));
-
-#if REPORT_C_STATES
-	if (gCheckC7)
+	if (gCpuModel >= CPU_MODEL_NEHALEM)
 	{
-		IOLOG("MSR_PKGC7_IRTL...................(0x60c) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC7_IRTL));
-	}
-#endif
+		IOLOG("MSR_PKG_C2_RESIDENCY.............(0x60d) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C2_RESIDENCY));
+		IOLOG("MSR_PKG_C3_RESIDENCY.............(0x3f8) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C3_RESIDENCY));
 
-	switch (gCpuModel)
-	{
-		case CPU_MODEL_NEHALEM:
-		case CPU_MODEL_NEHALEM_EX:
-		case CPU_MODEL_BROADWELL_E:
-
-			IOLOG("MSR_PKG_C2_RESIDENCY.............(0x60d) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C2_RESIDENCY));
+		IOLOG("MSR_PKG_C2_RESIDENCY.............(0x60d) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C2_RESIDENCY));
+		/*
+		 * Is package C3 auto-demotion/undemotion enabled i.e. is bit-25 or bit-27 set?
+		 */
+		if ((msr_pmg_cst_config_control & 0x2000000) || (msr_pmg_cst_config_control & 0x8000000))
+		{
 			IOLOG("MSR_PKG_C3_RESIDENCY.............(0x3f8) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C3_RESIDENCY));
-			break;
-
-		default:
-
-			IOLOG("MSR_PKG_C2_RESIDENCY.............(0x60d) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C2_RESIDENCY));
-			/*
-			 * Is package C3 auto-demotion/undemotion enabled i.e. is bit-25 or bit-27 set?
-			 */
-			if ((msr_pmg_cst_config_control & 0x2000000) || (msr_pmg_cst_config_control & 0x8000000))
-			{
-				IOLOG("MSR_PKG_C3_RESIDENCY.............(0x3f8) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C3_RESIDENCY));
-			}
+		}
 	}
 	
-	IOLOG("MSR_PKG_C6_RESIDENCY.............(0x3f9) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C6_RESIDENCY));
-
-#if REPORT_C_STATES
-	if (gCheckC7)
+	if (gCpuModel >= CPU_MODEL_SB_CORE)
 	{
-		IOLOG("MSR_PKG_C7_RESIDENCY.............(0x3fa) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C7_RESIDENCY));
+		IOLOG("MSR_PKG_C6_RESIDENCY.............(0x3f9) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C6_RESIDENCY));
+	
+		if (gCheckC7)
+		{
+			IOLOG("MSR_PKG_C7_RESIDENCY.............(0x3fa) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C7_RESIDENCY));
+		}
 	}
-#endif
 
 	if (gCpuModel == CPU_MODEL_HASWELL_ULT) // 0x45 - Intel 325462.pdf Vol.3C 35-136
 	{
@@ -1172,8 +1165,13 @@ void AppleIntelInfo::reportMSRs(void)
 			}
 #endif
 	}
+	
+	do_cpuid(0x00000001, cpuid_reg);
 
-	IOLOG("\nIA32_TSC_DEADLINE................(0x6E0) : 0x%llX\n", (unsigned long long)rdmsr64(0x6E0));
+	if (bitfield32(cpuid_reg[ecx], 24, 24) == 1)
+	{
+		IOLOG("\nIA32_TSC_DEADLINE................(0x6E0) : 0x%llX\n", (unsigned long long)rdmsr64(0x6E0));
+	}
 
 #if REPORT_HWP
 	reportHWP();
