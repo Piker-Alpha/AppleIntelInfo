@@ -42,12 +42,16 @@
  * Build settings (0 = disable feature / 1 = enable feature)
  */
 
-#define REPORT_RAPL_MSRS		1
 #define REPORT_MSRS				1
+#define REPORT_RAPL_MSRS		1
+#define REPORT_HWP				1
+#define REPORT_HDC				1
+
 #define REPORT_IGPU_P_STATES	1
 #define REPORT_C_STATES			1
 #define REPORT_IPG_STYLE		1
 #define REPORT_INTEL_REGS		0
+
 #define ENABLE_HWP				1
 
 #define WRITE_LOG_REPORT		1
