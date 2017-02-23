@@ -95,8 +95,11 @@
 	snprintf(logBuffer, TEMP_BUFFER_SIZE, format, ##args);	\
 	writeReport();
 #else
+	#define IOLOG(fmt, args...) IOLog(fmt, ##args)
+	/*
+	 * macOS Sierra only!
+	 */
 	#include <os/log.h>
-
 	#define IOLOG(fmt, args...) os_log_with_type(OS_LOG_DEFAULT, OS_LOG_TYPE_INFO, fmt, ##args)
 #endif
 
@@ -187,8 +190,15 @@ private:
 
 #ifdef REPORT_MSRS
 	void reportMSRs(void);
+
+	#ifdef REPORT_HWP
 	void reportHWP(void);
+	#endif
+
+	#ifdef REPORT_HWP
 	void reportHDC(void);
+	#endif
+
 	bool hasCPUFeature(long targetCPUFeature);
 
 	bool logMSRs		= true;		// Set <key>logIGPU</key> to <false/> in Info.plist to disable this feature.
@@ -233,11 +243,11 @@ private:
 	
 	UInt64	gIGPUMultipliers		= 0ULL;
 	UInt64	gTriggeredIGPUPStates	= 0ULL;
-	
+
+#if WRITE_LOG_REPORT
 	vfs_context_t mCtx				= NULL;
 	long reportFileOffset			= 0L;
 
-#if WRITE_LOG_REPORT
 	char tempBuffer[TEMP_BUFFER_SIZE];
 	char logBuffer[WRITE_BUFFER_SIZE];
 #endif

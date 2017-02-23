@@ -121,6 +121,7 @@ bool AppleIntelInfo::supportsRAPL(UInt16 aTargetRAPLFeature)
 	return false;
 }
 
+
 //==============================================================================
 
 void AppleIntelInfo::reportRAPL(UInt16 aTargetRAPL)
@@ -309,7 +310,7 @@ void AppleIntelInfo::reportRAPL(UInt16 aTargetRAPL)
 #endif
 
 
-#if REPORT_MSRS
+#if (REPORT_MSRS && REPORT_HWP)
 //==============================================================================
 
 void AppleIntelInfo::reportHWP(void)
@@ -417,7 +418,7 @@ void AppleIntelInfo::reportHWP(void)
 #endif
 
 
-#if REPORT_MSRS
+#if (REPORT_MSRS && REPORT_HDC)
 //==============================================================================
 
 void AppleIntelInfo::reportHDC(void)
@@ -1161,16 +1162,19 @@ void AppleIntelInfo::reportMSRs(void)
 				IOLOG(" - Turbo Transition Attenuation Log..... : %s\n", bitfield32(msr, 29, 29) ? "1 (status bit has asserted)" : "0");
 				// bit 63-30 Reserved.
 			}
-		
+#if REPORT_HDC
 			if ((cpuid_reg[eax] & 0x2000) == 0x2000) // bit-13 HDC base registers IA32_PKG_HDC_CTL, IA32_PM_CTL1, IA32_THREAD_STALL MSRs are supported if set.
 			{
 				reportHDC();
 			}
+#endif
 	}
 
 	IOLOG("\nIA32_TSC_DEADLINE................(0x6E0) : 0x%llX\n", (unsigned long long)rdmsr64(0x6E0));
 
+#if REPORT_HWP
 	reportHWP();
+#endif
 }
 #endif
 
@@ -1272,7 +1276,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 			wrmsr64(IA32_MPERF, 0ULL);
 			busy = ((aPerf * 100) / mPerf);
 		}
-		
+
 		pState = (UInt8)(((gClockRatio + 0.5) * busy) / 100);
 
 /*		if (pState != currentMultiplier)
@@ -1448,31 +1452,42 @@ bool AppleIntelInfo::start(IOService *provider)
 
 		if (simpleLock)
 		{
-			mCtx = vfs_context_create(NULL); // vfs_context_current();
+#if WRITE_LOG_REPORT
+			mCtx = vfs_context_create(NULL);
+#endif
 			uint32_t cpuid_reg[4];
 
 			IOLOG("AppleIntelInfo.kext v%s Copyright © 2012-2017 Pike R. Alpha. All rights reserved.\n", VERSION);
-#if ENABLE_HWP
-			OSBoolean * key_enableHWP = OSDynamicCast(OSBoolean, getProperty("enableHWP"));
 			
-			if (key_enableHWP)
+			do_cpuid(0x00000006, cpuid_reg);
+			
+			if ((cpuid_reg[eax] & 0x80) == 0x80) // Is HWP supported?
 			{
-				if ((bool)key_enableHWP->getValue())
+				if (rdmsr64(IA32_PM_ENABLE) & 1) // Yes. Is HWP enabled?
 				{
-					do_cpuid(0x00000006, cpuid_reg);
-				
-					if ((cpuid_reg[eax] & 0x80) == 0x80)
+					gHwpEnabled = true; // Yes.
+				}
+#if ENABLE_HWP
+				else
+				{
+					/*
+					 * HWP is supported but not enabled (yet) and thus we
+					 * check the preference to see if we should enable it.
+					 */
+					OSBoolean * key_enableHWP = OSDynamicCast(OSBoolean, getProperty("enableHWP"));
+			
+					if (key_enableHWP) // Key found?
 					{
-						if (rdmsr64(IA32_PM_ENABLE) == 0)
+						if ((bool)key_enableHWP->getValue()) // Yes. Check value.
 						{
-							wrmsr64(IA32_PM_ENABLE, 1);
+							wrmsr64(IA32_PM_ENABLE, 1); // Enable HWP.
 						}
 					}
+
+					IOLOG("enableHWP................................: %d\n", (bool)key_enableHWP->getValue());
 				}
-			}
-			
-			IOLOG("enableHWP................................: %d\n", (bool)key_enableHWP->getValue());
 #endif
+			}
 
 #if REPORT_MSRS
 			OSBoolean * key_logMSRs = OSDynamicCast(OSBoolean, getProperty("logMSRs"));
@@ -1712,10 +1727,12 @@ bool AppleIntelInfo::start(IOService *provider)
 
 void AppleIntelInfo::stop(IOService *provider)
 {
+#if	WRITE_LOG_REPORT
 	if (mCtx)
 	{
 		vfs_context_rele(mCtx);
 	}
+#endif
 
 	if (simpleLock)
 	{
