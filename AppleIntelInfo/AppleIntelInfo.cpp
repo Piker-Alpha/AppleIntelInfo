@@ -1002,8 +1002,6 @@ void AppleIntelInfo::reportMSRs(void)
 		reportRAPL(RAPL_CORES);
 	}
 
-	IOLOG("\nMSR_TURBO_ACTIVATION_RATIO.......(0x64C) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_TURBO_ACTIVATION_RATIO));
-
 	if (igpuEnabled && supportsRAPL(RAPL_GFX))
 	{
 		reportRAPL(RAPL_GFX);
