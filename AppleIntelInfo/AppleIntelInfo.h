@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2016 Pike R. Alpha. All rights reserved.
+ * Copyright (c) 2012-2017 Pike R. Alpha. All rights reserved.
  *
  * Original idea and initial development of MSRDumper.kext (c) 2011 by † RevoGirl.
  *
@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"2.4"
+#define VERSION					"2.5"
 
 /*
  * Build settings (0 = disable feature / 1 = enable feature)

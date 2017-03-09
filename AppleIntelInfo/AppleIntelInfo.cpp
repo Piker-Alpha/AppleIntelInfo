@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2016 Pike R. Alpha. All rights reserved.
+ * Copyright (c) 2012-2017 Pike R. Alpha. All rights reserved.
  *
  * Original idea and initial development of MSRDumper.kext (c) 2011 by RevoGirl.
  *
@@ -1083,15 +1083,23 @@ void AppleIntelInfo::reportMSRs(void)
 		}
 	}
 
-	if (gCpuModel == CPU_MODEL_HASWELL_ULT) // 0x45 - Intel 325462.pdf Vol.3C 35-136
+	switch (gCpuModel)
 	{
-		IOLOG("MSR_PKG_C8_RESIDENCY............(0x630) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
-		IOLOG("MSR_PKG_C9_RESIDENCY............(0x631) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
-		IOLOG("MSR_PKG_C10_RESIDENCY...........(0x632) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
+		case CPU_MODEL_BROADWELL:		// 0x3D
+		case CPU_MODEL_HASWELL_ULT:		// 0x45 - Intel 325462.pdf Vol.3C 35-136
+		case CPU_MODEL_SKYLAKE:			// 0x4E
+		case CPU_MODEL_SKYLAKE_DT:		// 0x5E
+		case CPU_MODEL_KABYLAKE:		// 0x8E
+		case CPU_MODEL_KABYLAKE_DT:		// 0x9E
+		case 0x5C:						/* BXT */
+			IOLOG("MSR_PKG_C8_RESIDENCY............(0x630) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
+			IOLOG("MSR_PKG_C9_RESIDENCY............(0x631) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
+			IOLOG("MSR_PKG_C10_RESIDENCY...........(0x632) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
 		
-		IOLOG("MSR_PKG_C8_LATENCY..............(0x633) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
-		IOLOG("MSR_PKG_C9_LATENCY..............(0x634) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
-		IOLOG("MSR_PKG_C10_LATENCY.............(0x635) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
+			IOLOG("MSR_PKG_C8_LATENCY..............(0x633) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
+			IOLOG("MSR_PKG_C9_LATENCY..............(0x634) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
+			IOLOG("MSR_PKG_C10_LATENCY.............(0x635) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
+			break;
 	}
 
 	switch (gCpuModel)
