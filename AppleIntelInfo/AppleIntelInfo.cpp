@@ -73,43 +73,35 @@ bool AppleIntelInfo::supportsRAPL(UInt16 aTargetRAPLFeature)
 
 	switch (gCpuModel)
 	{
-		case CPU_MODEL_SB_CORE:
-		case CPU_MODEL_IB_CORE:
-		case CPU_MODEL_HASWELL:
-		case CPU_MODEL_HASWELL_ULT:
-		case CPU_MODEL_CRYSTALWELL:
-		case CPU_MODEL_BROADWELL:
-		case CPU_MODEL_BROADWELL_H:
+		case INTEL_FAM6_SANDYBRIDGE:
+		case INTEL_FAM6_IVYBRIDGE:
+		case INTEL_FAM6_HASWELL_CORE:
+		case INTEL_FAM6_HASWELL_ULT:
+		case INTEL_FAM6_HASWELL_GT3E:
+		case INTEL_FAM6_BROADWELL_CORE:
+		case INTEL_FAM6_BROADWELL_GT3E:
 			supportedRAPLFeatures = (RAPL_PKG | RAPL_CORES | RAPL_CORE_POLICY | RAPL_GFX | RAPL_PKG_POWER_INFO);
 			break;
 
-		case 0x5C:	/* BXT */
-			supportedRAPLFeatures = (RAPL_PKG | RAPL_PKG_POWER_INFO);
+		case INTEL_FAM6_SKYLAKE_MOBILE:
+		case INTEL_FAM6_SKYLAKE_DESKTOP:
+		case INTEL_FAM6_KABYLAKE_MOBILE:
+		case INTEL_FAM6_KABYLAKE_DESKTOP:
+			supportedRAPLFeatures = (RAPL_PKG | RAPL_CORES | RAPL_CORE_POLICY | RAPL_DRAM | RAPL_DRAM_PERF_STATUS | RAPL_PKG_PERF_STATUS | RAPL_GFX | RAPL_PKG_POWER_INFO);
 			break;
 
-		case CPU_MODEL_SKYLAKE:
-		case CPU_MODEL_SKYLAKE_DT:
-		case CPU_MODEL_KABYLAKE:
-		case CPU_MODEL_KABYLAKE_DT:
-			supportedRAPLFeatures = (RAPL_PKG | RAPL_DRAM | RAPL_DRAM_PERF_STATUS | RAPL_PKG_PERF_STATUS | RAPL_GFX | RAPL_PKG_POWER_INFO);
-			break;
-
-		case CPU_MODEL_HASWELL_SVR:
-		case CPU_MODEL_BROADWELL_E:
-		case 0x56:	/* BDX-DE */
-		case 0x55:	/* SKX */
-		case 0x57:	/* KNL */
+		case INTEL_FAM6_HASWELL_X:
+		case INTEL_FAM6_BROADWELL_X:
+		case INTEL_FAM6_BROADWELL_XEON_D:
+		case INTEL_FAM6_SKYLAKE_X:
+		case INTEL_FAM6_XEON_PHI_KNL:
+        case INTEL_FAM6_XEON_PHI_KNM:
 			supportedRAPLFeatures = (RAPL_PKG | RAPL_DRAM | RAPL_DRAM_POWER_INFO | RAPL_DRAM_PERF_STATUS | RAPL_PKG_PERF_STATUS | RAPL_PKG_POWER_INFO);
 			break;
 
-		case CPU_MODEL_SB_JAKETOWN:
-		case CPU_MODEL_IB_CORE_XEON:
+		case INTEL_FAM6_SANDYBRIDGE_X:
+		case INTEL_FAM6_IVYBRIDGE_X:
 			supportedRAPLFeatures = (RAPL_PKG | RAPL_CORES | RAPL_CORE_POLICY | RAPL_DRAM | RAPL_DRAM_POWER_INFO | RAPL_PKG_PERF_STATUS | RAPL_DRAM_PERF_STATUS | RAPL_PKG_POWER_INFO);
-			break;
-
-		case 0x37:	/* BYT */
-		case 0x4D:	/* AVN */
-			supportedRAPLFeatures = (RAPL_PKG | RAPL_CORES);
 			break;
 	}
 	
@@ -250,7 +242,7 @@ void AppleIntelInfo::reportRAPL(UInt16 aTargetRAPL)
 			break;
 
 		case RAPL_CORE_POLICY:		/* 0x63a MSR_PP0_POLICY */
-			if (gCpuModel == CPU_MODEL_SB_CORE) // 0x2A - Intel 325462.pdf Vol.3C 35-120
+			if (gCpuModel == INTEL_FAM6_SANDYBRIDGE) // 0x2A - Intel 325462.pdf Vol.3C 35-120
 			{
 				msr = rdmsr64(MSR_PP0_POLICY);
 				
@@ -331,10 +323,10 @@ void AppleIntelInfo::reportHWP(void)
 
 			switch (gCpuModel)
 			{
-				case CPU_MODEL_SKYLAKE:
-				case CPU_MODEL_SKYLAKE_DT:
-				case CPU_MODEL_KABYLAKE:
-				case CPU_MODEL_KABYLAKE_DT:
+				case INTEL_FAM6_SKYLAKE_MOBILE:
+				case INTEL_FAM6_SKYLAKE_DESKTOP:
+				case INTEL_FAM6_KABYLAKE_MOBILE:
+				case INTEL_FAM6_KABYLAKE_DESKTOP:
 					UInt64 pPerf = rdmsr64(IA32_PPERF);
 					UInt64 aPerf = rdmsr64(IA32_APERF);
 					float busy = ((pPerf * 100) / aPerf);
@@ -344,8 +336,7 @@ void AppleIntelInfo::reportHWP(void)
 					break;
 			}
 
-			IOLOG("\nIA32_PM_ENABLE...................(0x770) : 0x%llX ", msr);
-			IOLOG("(HWP Supported and Enabled)\n");
+			IOLOG("\nIA32_PM_ENABLE...................(0x770) : 0x%llX (HWP Supported and Enabled)\n", msr);
 			
 			msr = rdmsr64(IA32_HWP_CAPABILITIES);
 
@@ -411,7 +402,7 @@ void AppleIntelInfo::reportHWP(void)
 		}
 		else
 		{
-			IOLOG("(HWP Supported but not (yet) enabled)\n");
+			IOLOG("\nIA32_PM_ENABLE...................(0x770) : 0x%llX (HWP Supported but not, yet, enabled)\n", msr);
 		}
 	}
 }
@@ -520,12 +511,12 @@ uint32_t AppleIntelInfo::getBusFrequency(void)
 
 	switch (gCpuModel)
 	{
-		case CPU_MODEL_NEHALEM:
-		case CPU_MODEL_FIELDS:
-		case CPU_MODEL_DALES_32NM:
-		case CPU_MODEL_WESTMERE:
-		case CPU_MODEL_NEHALEM_EX:
-		case CPU_MODEL_WESTMERE_EX:
+		case INTEL_FAM6_NEHALEM:
+ 		case INTEL_FAM6_NEHALEM_EP:
+   		case INTEL_FAM6_NEHALEM_EX:
+		case INTEL_FAM6_WESTMERE:
+		case INTEL_FAM6_WESTMERE_EP:
+		case INTEL_FAM6_WESTMERE_EX:
 			return (133 * 1000000);
 			break;
 
@@ -712,7 +703,7 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG("IA32_APERF.......................(0xE8)  : 0x%llX\n", aPerf);
 	}
 
-	if (gCpuModel == CPU_MODEL_BROADWELL_E)
+	if (gCpuModel == INTEL_FAM6_BROADWELL_X)
 	{
 		IOLOG("MSR_0x150........................(0x150) : 0x%llX\n", (unsigned long long)rdmsr64(0x150));
 	}
@@ -998,7 +989,7 @@ void AppleIntelInfo::reportMSRs(void)
 		reportRAPL(RAPL_PKG);
 	}
 
-	if (gCpuModel == CPU_MODEL_SB_CORE) // 0x2A - Intel 325462.pdf Vol.3C 35-120
+	if (gCpuModel == INTEL_FAM6_SANDYBRIDGE) // 0x2A - Intel 325462.pdf Vol.3C 35-120
 	{
 		IOLOG("\nMSR_PP0_CURRENT_CONFIG...........(0x601) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PP0_CURRENT_CONFIG));
 	}
@@ -1022,22 +1013,22 @@ void AppleIntelInfo::reportMSRs(void)
 
 	switch (gCpuModel)
 	{
-		case CPU_MODEL_IB_CORE:				// 0x3A - Intel 325462.pdf (Table 35-23) 35-174 Vol.3C
-		case CPU_MODEL_IB_CORE_EX:			// 0x3B
+		case INTEL_FAM6_IVYBRIDGE:			// 0x3A - Intel 325462.pdf (Table 35-23) 35-174 Vol.3C
+        case INTEL_FAM6_IVYBRIDGE_X:		// 0x3E
 			
-		case CPU_MODEL_HASWELL:				// 0x3C - Intel 325462.pdf (Table 35-27) 35-192 Vol.3C
-		case CPU_MODEL_HASWELL_SVR:			// 0x3F
-		case CPU_MODEL_HASWELL_ULT:			// 0x45
+		case INTEL_FAM6_HASWELL_CORE:		// 0x3C - Intel 325462.pdf (Table 35-27) 35-192 Vol.3C
+		case INTEL_FAM6_HASWELL_X:			// 0x3F
+        case INTEL_FAM6_HASWELL_ULT:		// 0x45
 			
-		case CPU_MODEL_CRYSTALWELL:			// 0x46
-		case CPU_MODEL_BROADWELL_H:			// 0x47
-		case CPU_MODEL_SKYLAKE:				// 0x4E
-		case 0x55:							// 0x55
-		case 0x56:							// 0x56
+		case INTEL_FAM6_HASWELL_GT3E:		// 0x46
+		case INTEL_FAM6_BROADWELL_GT3E:		// 0x47
+		case INTEL_FAM6_SKYLAKE_MOBILE:		// 0x4E
+		case INTEL_FAM6_SKYLAKE_X:			// 0x55
+		case INTEL_FAM6_BROADWELL_XEON_D:
 		case 0x57:							// 0x57 - Intel 325462.pdf (Table 35-40) Vol.3C 35-275
-		case CPU_MODEL_SKYLAKE_DT:			// 0x5E - Intel 325462.pdf (Table 35-27) 35-192 Vol.3C
-		case CPU_MODEL_KABYLAKE:			// 0x8E
-		case CPU_MODEL_KABYLAKE_DT:			// 0x9E
+        case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E - Intel 325462.pdf (Table 35-27) 35-192 Vol.3C
+		case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
+		case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
 			
 			IOLOG("MSR_CONFIG_TDP_NOMINAL...........(0x648) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CONFIG_TDP_NOMINAL));
 			IOLOG("MSR_CONFIG_TDP_LEVEL1............(0x649) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_CONFIG_TDP_LEVEL1));
@@ -1047,7 +1038,7 @@ void AppleIntelInfo::reportMSRs(void)
 			break;
 	}
 
-	if (gCpuModel >= CPU_MODEL_SB_CORE)
+	if (gCpuModel >= INTEL_FAM6_SANDYBRIDGE)
 	{
 		IOLOG("MSR_PKGC3_IRTL...................(0x60a) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC3_IRTL));
 		IOLOG("MSR_PKGC6_IRTL...................(0x60b) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKGC6_IRTL));
@@ -1058,7 +1049,7 @@ void AppleIntelInfo::reportMSRs(void)
 		}
 	}
 
-	if (gCpuModel >= CPU_MODEL_NEHALEM)
+	if (gCpuModel >= INTEL_FAM6_NEHALEM)
 	{
 		IOLOG("MSR_PKG_C2_RESIDENCY.............(0x60d) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C2_RESIDENCY));
 		IOLOG("MSR_PKG_C3_RESIDENCY.............(0x3f8) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C3_RESIDENCY));
@@ -1073,7 +1064,7 @@ void AppleIntelInfo::reportMSRs(void)
 		}
 	}
 	
-	if (gCpuModel >= CPU_MODEL_SB_CORE)
+	if (gCpuModel >= INTEL_FAM6_SANDYBRIDGE)
 	{
 		IOLOG("MSR_PKG_C6_RESIDENCY.............(0x3f9) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C6_RESIDENCY));
 	
@@ -1085,13 +1076,12 @@ void AppleIntelInfo::reportMSRs(void)
 
 	switch (gCpuModel)
 	{
-		case CPU_MODEL_BROADWELL:		// 0x3D
-		case CPU_MODEL_HASWELL_ULT:		// 0x45 - Intel 325462.pdf Vol.3C 35-136
-		case CPU_MODEL_SKYLAKE:			// 0x4E
-		case CPU_MODEL_SKYLAKE_DT:		// 0x5E
-		case CPU_MODEL_KABYLAKE:		// 0x8E
-		case CPU_MODEL_KABYLAKE_DT:		// 0x9E
-		case 0x5C:						/* BXT */
+		case INTEL_FAM6_BROADWELL_CORE:		// 0x3D
+		case INTEL_FAM6_HASWELL_ULT:		// 0x45 - Intel 325462.pdf Vol.3C 35-136
+		case INTEL_FAM6_SKYLAKE_MOBILE:		// 0x4E
+		case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E
+        case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
+		case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
 			IOLOG("MSR_PKG_C8_RESIDENCY............(0x630) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
 			IOLOG("MSR_PKG_C9_RESIDENCY............(0x631) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
 			IOLOG("MSR_PKG_C10_RESIDENCY...........(0x632) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
@@ -1104,10 +1094,10 @@ void AppleIntelInfo::reportMSRs(void)
 
 	switch (gCpuModel)
 	{
-		case CPU_MODEL_SKYLAKE:
-		case CPU_MODEL_SKYLAKE_DT:
-		case CPU_MODEL_KABYLAKE:
-		case CPU_MODEL_KABYLAKE_DT:
+		case INTEL_FAM6_SKYLAKE_MOBILE:
+		case INTEL_FAM6_SKYLAKE_DESKTOP:
+		case INTEL_FAM6_KABYLAKE_MOBILE:
+		case INTEL_FAM6_KABYLAKE_DESKTOP:
 
 			msr = rdmsr64(MSR_PLATFORM_ENERGY_COUNTER);
 
@@ -1178,7 +1168,7 @@ void AppleIntelInfo::reportMSRs(void)
 
 	if (bitfield32(cpuid_reg[ecx], 24, 24) == 1)
 	{
-		IOLOG("\nIA32_TSC_DEADLINE................(0x6E0) : 0x%llX\n", (unsigned long long)rdmsr64(0x6E0));
+		IOLOG("\nIA32_TSC_DEADLINE................(0x6E0) : 0x%llX\n", (unsigned long long)rdmsr64(IA32_TSC_DEADLINE));
 	}
 
 #if REPORT_HWP
@@ -1241,7 +1231,7 @@ IOReturn AppleIntelInfo::loopTimerEvent(void)
 
 	if (igpuEnabled)
 	{
-		if (gCpuModel == CPU_MODEL_SKYLAKE)
+		if (gCpuModel == INTEL_FAM6_SKYLAKE_MOBILE || gCpuModel == INTEL_FAM6_SKYLAKE_DESKTOP)
 		{
 			currentIgpuMultiplier = (UInt8)(((gMchbar[1] * 16.666) + 0.5) / 50);
 		}
@@ -1583,21 +1573,20 @@ bool AppleIntelInfo::start(IOService *provider)
 #if REPORT_C_STATES
 			switch (gCpuModel) // TODO: Verify me!
 			{
-				case CPU_MODEL_SB_CORE:			// 0x2A - Intel 325462.pdf Vol.3C 35-111
-				case CPU_MODEL_SB_JAKETOWN:		// 0x2D - Intel 325462.pdf Vol.3C 35-111
-				case CPU_MODEL_IB_CORE:			// 0x3A - Intel 325462.pdf Vol.3C 35-125 (Refering to Table 35-12)
-				case CPU_MODEL_IB_CORE_EX:		// 0x3B - Intel 325462.pdf Vol.3C 35-125 (Refering to Table 35-12)
+				case INTEL_FAM6_SANDYBRIDGE:		// 0x2A - Intel 325462.pdf Vol.3C 35-111
+				case INTEL_FAM6_SANDYBRIDGE_X:		// 0x2D - Intel 325462.pdf Vol.3C 35-111
+				case INTEL_FAM6_IVYBRIDGE:			// 0x3A - Intel 325462.pdf Vol.3C 35-125 (Refering to Table 35-12)
+				case INTEL_FAM6_IVYBRIDGE_X:		// 0x3E - Intel 325462.pdf Vol.3C 35-125 (Refering to Table 35-12)
 					// No C7 support for Intel® Xeon® Processor E5-1600 v2/E5-2600 v2 (Product Families Datasheet Volume One of Two page 19)
-					// case CPU_MODEL_IB_CORE_XEON:	// 0x3E - Intel 325462.pdf Vol.3C 35-125 (Refering to Table 35-12)
-				case CPU_MODEL_HASWELL:			// 0x3C - Intel 325462.pdf Vol.3C 35-136
-				case CPU_MODEL_BROADWELL:		// 0x3D
-				case CPU_MODEL_HASWELL_ULT:		// 0x45 - Intel 325462.pdf Vol.3C 35-136
-				case CPU_MODEL_CRYSTALWELL:		// 0x46
-				case CPU_MODEL_BRYSTALWELL:		// 0x47
-				case CPU_MODEL_SKYLAKE:			// 0x4E
-				case CPU_MODEL_SKYLAKE_DT:		// 0x5E
-				case CPU_MODEL_KABYLAKE:		// 0x8E
-				case CPU_MODEL_KABYLAKE_DT:		// 0x9E
+				case INTEL_FAM6_HASWELL_CORE:		// 0x3C - Intel 325462.pdf Vol.3C 35-136
+				case INTEL_FAM6_BROADWELL_CORE:		// 0x3D
+				case INTEL_FAM6_HASWELL_ULT:		// 0x45 - Intel 325462.pdf Vol.3C 35-136
+				case INTEL_FAM6_HASWELL_GT3E:		// 0x46
+				case INTEL_FAM6_BROADWELL_X:		// 0x47
+				case INTEL_FAM6_SKYLAKE_MOBILE:		// 0x4E
+				case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E
+				case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
+				case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
 					gCheckC7 = true;
 					break;
 			}

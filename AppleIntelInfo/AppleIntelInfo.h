@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"2.5"
+#define VERSION					"2.6"
 
 /*
  * Build settings (0 = disable feature / 1 = enable feature)
@@ -108,16 +108,43 @@
 #endif
 
 
-#define RAPL_BASE				0
-#define RAPL_PKG				(1 << 0)
-#define RAPL_PKG_PERF_STATUS	(1 << 1)
-#define RAPL_PKG_POWER_INFO		(1 << 2)
-#define RAPL_DRAM				(1 << 3)
-#define RAPL_DRAM_PERF_STATUS	(1 << 4)
-#define RAPL_DRAM_POWER_INFO	(1 << 5)
-#define RAPL_CORES				(1 << 6)
-#define RAPL_CORE_POLICY		(1 << 7)
-#define RAPL_GFX				(1 << 8)
+#define RAPL_BASE					0
+
+#define RAPL_PKG					(1 << 0)
+												/* 0x610 MSR_PKG_POWER_LIMIT */
+												/* 0x611 MSR_PKG_ENERGY_STATUS */
+
+#define RAPL_PKG_PERF_STATUS		(1 << 1)
+												/* 0x613 MSR_PKG_PERF_STATUS */
+
+#define RAPL_PKG_POWER_INFO			(1 << 2)
+												/* 0x614 MSR_PKG_POWER_INFO */
+
+#define RAPL_DRAM					(1 << 3)
+												/* 0x618 MSR_DRAM_POWER_LIMIT */
+												/* 0x619 MSR_DRAM_ENERGY_STATUS */
+
+#define RAPL_DRAM_PERF_STATUS		(1 << 4)
+												/* 0x61b MSR_DRAM_PERF_STATUS */
+
+#define RAPL_DRAM_POWER_INFO		(1 << 5)
+												/* 0x61c MSR_DRAM_POWER_INFO */
+
+#define RAPL_CORES_POWER_LIMIT		(1 << 6)
+												/* 0x638 MSR_PP0_POWER_LIMIT */
+
+#define RAPL_CORE_POLICY			(1 << 7)
+												/* 0x63a MSR_PP0_POLICY */
+
+#define RAPL_GFX					(1 << 8)
+												/* 0x640 MSR_PP1_POWER_LIMIT */
+												/* 0x641 MSR_PP1_ENERGY_STATUS */
+												/* 0x642 MSR_PP1_POLICY */
+
+#define RAPL_CORES_ENERGY_STATUS	(1 << 9)
+												/* 0x639 MSR_PP0_ENERGY_STATUS */
+
+#define RAPL_CORES (RAPL_CORES_ENERGY_STATUS | RAPL_CORES_POWER_LIMIT)
 
 
 //------------------------------------------------------------------------------

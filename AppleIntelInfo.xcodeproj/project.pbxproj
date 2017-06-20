@@ -12,6 +12,7 @@
 		90BE8FCF19A20F4A00E9E8B5 /* AppleIntelInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 90BE8FCE19A20F4A00E9E8B5 /* AppleIntelInfo.cpp */; };
 		90BE8FD319A20FD200E9E8B5 /* AppleIntelInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 90BE8FD219A20FD200E9E8B5 /* AppleIntelInfo.h */; };
 		90BE8FD519A2104A00E9E8B5 /* essentials.h in Headers */ = {isa = PBXBuildFile; fileRef = 90BE8FD419A2104A00E9E8B5 /* essentials.h */; };
+		90F0224E1EF918BF0095F865 /* intel_family.h in Headers */ = {isa = PBXBuildFile; fileRef = 90F0224D1EF918BF0095F865 /* intel_family.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		90BE8FD219A20FD200E9E8B5 /* AppleIntelInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppleIntelInfo.h; sourceTree = "<group>"; };
 		90BE8FD419A2104A00E9E8B5 /* essentials.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = essentials.h; sourceTree = "<group>"; };
 		90EACB9219A6B7F800512CC9 /* AppleIntelRegisterDumper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppleIntelRegisterDumper.h; path = AppleIntelRegisterDumper/AppleIntelRegisterDumper.h; sourceTree = "<group>"; };
+		90F0224D1EF918BF0095F865 /* intel_family.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = intel_family.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +94,7 @@
 		90BE8FD019A20FA400E9E8B5 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
+				90F0224D1EF918BF0095F865 /* intel_family.h */,
 				90BE8FD219A20FD200E9E8B5 /* AppleIntelInfo.h */,
 				90BE8FD419A2104A00E9E8B5 /* essentials.h */,
 			);
@@ -134,6 +137,7 @@
 				9001A73819A79C390049DB99 /* intel_chipset.h in Headers */,
 				90BE8FD319A20FD200E9E8B5 /* AppleIntelInfo.h in Headers */,
 				9001A73619A79C310049DB99 /* intel_reg.h in Headers */,
+				90F0224E1EF918BF0095F865 /* intel_family.h in Headers */,
 				90BE8FD519A2104A00E9E8B5 /* essentials.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -166,7 +170,7 @@
 		90BE8FB119A20EDF00E9E8B5 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0700;
+				LastUpgradeCheck = 0800;
 				ORGANIZATIONNAME = wordpress.pikeralpha.com;
 			};
 			buildConfigurationList = 90BE8FB419A20EDF00E9E8B5 /* Build configuration list for PBXProject "AppleIntelInfo" */;
@@ -231,14 +235,19 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -271,14 +280,19 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;

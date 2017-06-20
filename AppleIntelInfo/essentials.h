@@ -6,6 +6,7 @@
 #ifndef __LIBSAIO_CPU_ESSENTIALS_H
 #define __LIBSAIO_CPU_ESSENTIALS_H
 
+#include "intel_family.h"
 
 /* Copied from xnu/osfmk/cpuid.c (modified for 64-bit values) */
 #define bit(n)				(1UL << (n))
@@ -141,6 +142,8 @@
 #define MSR_CORE_GFXE_OVERLAP_C0		0x65B
 #define MSR_PLATFORM_POWER_LIMIT		0x65C
 
+#define IA32_TSC_DEADLINE				0x6E0
+
 #define IA32_PKG_HDC_CTL				0xDB0
 #define IA32_PM_CTL1					0xDB1
 #define IA32_THREAD_STALL				0xDB2
@@ -167,7 +170,7 @@
 
 #define MAX_CPUID_LEAVES	9			// DHP: Formerly known as MAX_CPUID
 
-/* Copied from: xnu/osfmk/i386/cpuid.h */
+/* Copied from: xnu/osfmk/i386/cpuid.h
 #define CPU_MODEL_YONAH  			0x0E
 #define CPU_MODEL_MEROM				0x0F
 #define CPU_MODEL_PENRYN			0x17
@@ -200,10 +203,12 @@
 #define CPU_MODEL_SKYLAKE			0x4E
 #define CPU_MODEL_SKYLAKE_ULT		0x4E
 #define CPU_MODEL_SKYLAKE_ULX		0x4E
+#define CPU_MODEL_SKYLAKE_X			0x55
 #define CPU_MODEL_SKYLAKE_DT		0x5E
 
 #define CPU_MODEL_KABYLAKE			0x8E
 #define CPU_MODEL_KABYLAKE_DT		0x9E
+*/
 
 #define DALES_BRIDGE	1
 #define SANDY_BRIDGE	2
