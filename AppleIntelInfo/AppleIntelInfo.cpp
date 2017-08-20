@@ -615,7 +615,15 @@ void AppleIntelInfo::reportMSRs(void)
 	do_cpuid(0x00000006, cpuid_reg);
 
 	IOLOG("\nModel Specific Registers (MSRs)\n------------------------------------------\n");
-
+    
+	msr = rdmsr64(MSR_IA32_PLATFORM_ID);
+    
+	IOLOG("\nMSR_IA32_PLATFORM_ID.............(0x17)  : 0x%llX\n", msr);
+	IOLOG("------------------------------------------\n");
+    IOLOG(" - Processor Flags...................... : %d\n", (uint8_t)bitfield32(msr, 52, 50));
+    
+	msr = rdmsr64(MSR_CORE_THREAD_COUNT);
+    
 	IOLOG("\nMSR_CORE_THREAD_COUNT............(0x35)  : 0x%llX\n", msr);
 	IOLOG("------------------------------------------\n");
 	IOLOG(" - Core Count........................... : %d\n", gCoreCount);
@@ -1082,13 +1090,13 @@ void AppleIntelInfo::reportMSRs(void)
 		case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E
         case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
 		case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
-			IOLOG("MSR_PKG_C8_RESIDENCY............(0x630) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
-			IOLOG("MSR_PKG_C9_RESIDENCY............(0x631) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
-			IOLOG("MSR_PKG_C10_RESIDENCY...........(0x632) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
+			IOLOG("MSR_PKG_C8_RESIDENCY.............(0x630) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
+			IOLOG("MSR_PKG_C9_RESIDENCY.............(0x631) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
+			IOLOG("MSR_PKG_C10_RESIDENCY............(0x632) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
 		
-			IOLOG("MSR_PKG_C8_LATENCY..............(0x633) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
-			IOLOG("MSR_PKG_C9_LATENCY..............(0x634) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
-			IOLOG("MSR_PKG_C10_LATENCY.............(0x635) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
+			IOLOG("MSR_PKG_C8_LATENCY...............(0x633) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
+			IOLOG("MSR_PKG_C9_LATENCY...............(0x634) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C9_RESIDENCY));
+			IOLOG("MSR_PKG_C10_LATENCY..............(0x635) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C10_RESIDENCY));
 			break;
 	}
 
