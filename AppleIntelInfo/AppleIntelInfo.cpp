@@ -73,34 +73,35 @@ bool AppleIntelInfo::supportsRAPL(UInt16 aTargetRAPLFeature)
 
 	switch (gCpuModel)
 	{
-		case INTEL_FAM6_SANDYBRIDGE:
-		case INTEL_FAM6_IVYBRIDGE:
-		case INTEL_FAM6_HASWELL_CORE:
-		case INTEL_FAM6_HASWELL_ULT:
-		case INTEL_FAM6_HASWELL_GT3E:
-		case INTEL_FAM6_BROADWELL_CORE:
-		case INTEL_FAM6_BROADWELL_GT3E:
+		case INTEL_FAM6_SANDYBRIDGE:		// 0x2A
+		case INTEL_FAM6_IVYBRIDGE:			// 0x3A
+		case INTEL_FAM6_HASWELL_CORE:		// 0x3C
+		case INTEL_FAM6_HASWELL_ULT:		// 0x45
+		case INTEL_FAM6_HASWELL_GT3E:		// 0x46
+		case INTEL_FAM6_BROADWELL_CORE:		// 0x3D
+		case INTEL_FAM6_BROADWELL_GT3E:		// 0x47
 			supportedRAPLFeatures = (RAPL_PKG | RAPL_CORES | RAPL_CORE_POLICY | RAPL_GFX | RAPL_PKG_POWER_INFO);
 			break;
 
-		case INTEL_FAM6_SKYLAKE_MOBILE:
-		case INTEL_FAM6_SKYLAKE_DESKTOP:
-		case INTEL_FAM6_KABYLAKE_MOBILE:
-		case INTEL_FAM6_KABYLAKE_DESKTOP:
+		case INTEL_FAM6_SKYLAKE_MOBILE:		// 0x4E
+		case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E
+		case INTEL_FAM6_CANNONLAKE_CORE:	// 0x66
+		case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
+		case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
 			supportedRAPLFeatures = (RAPL_PKG | RAPL_CORES | RAPL_CORE_POLICY | RAPL_DRAM | RAPL_DRAM_PERF_STATUS | RAPL_PKG_PERF_STATUS | RAPL_GFX | RAPL_PKG_POWER_INFO);
 			break;
 
-		case INTEL_FAM6_HASWELL_X:
-		case INTEL_FAM6_BROADWELL_X:
-		case INTEL_FAM6_BROADWELL_XEON_D:
-		case INTEL_FAM6_SKYLAKE_X:
-		case INTEL_FAM6_XEON_PHI_KNL:
-        case INTEL_FAM6_XEON_PHI_KNM:
+		case INTEL_FAM6_HASWELL_X:			// 0x3F
+		case INTEL_FAM6_SKYLAKE_X:			// 0x55
+		case INTEL_FAM6_BROADWELL_X:		// 0x56
+		case INTEL_FAM6_BROADWELL_XEON_D:	// 0x56
+		case INTEL_FAM6_XEON_PHI_KNL:		// 0x57
+        case INTEL_FAM6_XEON_PHI_KNM:		// 0x85
 			supportedRAPLFeatures = (RAPL_PKG | RAPL_DRAM | RAPL_DRAM_POWER_INFO | RAPL_DRAM_PERF_STATUS | RAPL_PKG_PERF_STATUS | RAPL_PKG_POWER_INFO);
 			break;
 
-		case INTEL_FAM6_SANDYBRIDGE_X:
-		case INTEL_FAM6_IVYBRIDGE_X:
+		case INTEL_FAM6_SANDYBRIDGE_X:		// 0x2D
+		case INTEL_FAM6_IVYBRIDGE_X:		// 0x3E
 			supportedRAPLFeatures = (RAPL_PKG | RAPL_CORES | RAPL_CORE_POLICY | RAPL_DRAM | RAPL_DRAM_POWER_INFO | RAPL_PKG_PERF_STATUS | RAPL_DRAM_PERF_STATUS | RAPL_PKG_POWER_INFO);
 			break;
 	}
@@ -881,7 +882,7 @@ void AppleIntelInfo::reportMSRs(void)
 
 		IOLOG(" - Energy/Performance Bias support...... : %lu\n", bitfield32(cpuid_reg[ecx],  3,  3) );
 		IOLOG(" - Energy/Performance Bias.............. : %s\n", (msr & (1 <<  1)) ? "1 (enabled/MSR visible to software)" : "0 (disabled/MSR not visible to software)");
-
+		
 		IOLOG(" - Thermal Interrupt Coordination Enable : %s\n", (msr & (1 << 22)) ? "1 (thermal interrupt routed to all cores)" : "0 (thermal interrupt not rerouted)");
 		
 		/* HWP related SpeedShift settings */
@@ -1039,8 +1040,9 @@ void AppleIntelInfo::reportMSRs(void)
 		case INTEL_FAM6_SKYLAKE_MOBILE:		// 0x4E
 		case INTEL_FAM6_SKYLAKE_X:			// 0x55
 		case INTEL_FAM6_BROADWELL_XEON_D:
-		case 0x57:							// 0x57 - Intel 325462.pdf (Table 35-40) Vol.3C 35-275
+		case INTEL_FAM6_XEON_PHI_KNL:		// 0x57 - Intel 325462.pdf (Table 35-40) Vol.3C 35-275
         case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E - Intel 325462.pdf (Table 35-27) 35-192 Vol.3C
+		case INTEL_FAM6_CANNONLAKE_CORE:	// 0x66
 		case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
 		case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
 			
@@ -1094,6 +1096,7 @@ void AppleIntelInfo::reportMSRs(void)
 		case INTEL_FAM6_HASWELL_ULT:		// 0x45 - Intel 325462.pdf Vol.3C 35-136
 		case INTEL_FAM6_SKYLAKE_MOBILE:		// 0x4E
 		case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E
+		case INTEL_FAM6_CANNONLAKE_CORE:	// 0x66
         case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
 		case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
 			IOLOG("MSR_PKG_C8_RESIDENCY.............(0x630) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C8_RESIDENCY));
@@ -1108,10 +1111,11 @@ void AppleIntelInfo::reportMSRs(void)
 
 	switch (gCpuModel)
 	{
-		case INTEL_FAM6_SKYLAKE_MOBILE:
-		case INTEL_FAM6_SKYLAKE_DESKTOP:
-		case INTEL_FAM6_KABYLAKE_MOBILE:
-		case INTEL_FAM6_KABYLAKE_DESKTOP:
+		case INTEL_FAM6_SKYLAKE_MOBILE:		// 0x4E
+		case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E
+		case INTEL_FAM6_CANNONLAKE_CORE:	// 0x66
+		case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
+		case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
 
 			msr = rdmsr64(MSR_PLATFORM_ENERGY_COUNTER);
 
@@ -1599,6 +1603,7 @@ bool AppleIntelInfo::start(IOService *provider)
 				case INTEL_FAM6_BROADWELL_X:		// 0x47
 				case INTEL_FAM6_SKYLAKE_MOBILE:		// 0x4E
 				case INTEL_FAM6_SKYLAKE_DESKTOP:	// 0x5E
+				case INTEL_FAM6_CANNONLAKE_CORE:	// 0x66
 				case INTEL_FAM6_KABYLAKE_MOBILE:	// 0x8E
 				case INTEL_FAM6_KABYLAKE_DESKTOP:	// 0x9E
 					gCheckC7 = true;
