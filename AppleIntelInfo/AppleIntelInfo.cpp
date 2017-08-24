@@ -883,6 +883,12 @@ void AppleIntelInfo::reportMSRs(void)
 		IOLOG(" - Energy/Performance Bias.............. : %s\n", (msr & (1 <<  1)) ? "1 (enabled/MSR visible to software)" : "0 (disabled/MSR not visible to software)");
 
 		IOLOG(" - Thermal Interrupt Coordination Enable : %s\n", (msr & (1 << 22)) ? "1 (thermal interrupt routed to all cores)" : "0 (thermal interrupt not rerouted)");
+		
+		/* HWP related SpeedShift settings */
+		IOLOG(" - SpeedShift Technology Enable......... : %s\n", (msr & (1 <<  6)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - SpeedShift Interrupt Coordination.... : %s\n", (msr & (1 <<  7)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - SpeedShift Energy Efficient Perf..... : %s\n", (msr & (1 << 12)) ? "1 (enabled)" : "0 (disabled)");
+		IOLOG(" - SpeedShift Technology Setup for HWP.. : %s\n", (msr & 0x10c0) ? "Yes (setup for HWP)" : "No (not setup for HWP)");
 	}
 
 	msr = rdmsr64(MSR_TURBO_RATIO_LIMIT);

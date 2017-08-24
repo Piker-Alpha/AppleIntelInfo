@@ -36,7 +36,7 @@
 
 #define super IOService
 
-#define VERSION					"2.7"
+#define VERSION					"2.8"
 
 /*
  * Build settings (0 = disable feature / 1 = enable feature)
