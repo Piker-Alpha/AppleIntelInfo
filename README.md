@@ -3,9 +3,16 @@ AppleIntelInfo.kext
 
 What do I need to do?
 
-You first need to download and then compile AppleIntelInfo with Xcode.
+Step 1.) Download the project from Github and compile it with Xcode.
 
-How do I load AppleIntelInfo.kext?
+Step 2.) Fix file ownership and permissions.
+
+``` sh
+sudo chown -R root:wheel AppleIntelInfo.kext
+sudo chmod -R 755 AppleIntelInfo.kext
+```
+
+Step 3.) Load AppleIntelInfo.kext?
 
 ``` sh
 sudo kextload AppleIntelInfo.kext
@@ -16,7 +23,7 @@ sudo kextutil AppleIntelInfo.kext
 ```
 Warning: Do not copy the kext to: /System/Library/Extensions or /Library/Extensions and do not inject it with help of the boot loader!
 
-How do I unload AppleIntelInfo.kext?
+Step 4.) Unload AppleIntelInfo.kext?
 
 ``` sh
 sudo kextunload AppleIntelInfo.kext
