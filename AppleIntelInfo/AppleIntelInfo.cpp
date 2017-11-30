@@ -1068,9 +1068,6 @@ void AppleIntelInfo::reportMSRs(void)
 	if (gCpuModel >= INTEL_FAM6_NEHALEM)
 	{
 		IOLOG("MSR_PKG_C2_RESIDENCY.............(0x60d) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C2_RESIDENCY));
-		IOLOG("MSR_PKG_C3_RESIDENCY.............(0x3f8) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C3_RESIDENCY));
-
-		IOLOG("MSR_PKG_C2_RESIDENCY.............(0x60d) : 0x%llX\n", (unsigned long long)rdmsr64(MSR_PKG_C2_RESIDENCY));
 		/*
 		 * Is package C3 auto-demotion/undemotion enabled i.e. is bit-25 or bit-27 set?
 		 */
